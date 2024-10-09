@@ -24,7 +24,7 @@ func CreateTCPProxy(ctx context.Context, client *client.Client, externalHost str
 		return nil, err
 	}
 
-	if err := PullImageIfNotThere(ctx, client, "ghcr.io/shyim/tanjun-tcp-proxy:latest"); err != nil {
+	if err := PullImageIfNotThere(ctx, client, "ghcr.io/shyim/tanjun/tcp-proxy:v1"); err != nil {
 		return nil, err
 	}
 
@@ -41,7 +41,7 @@ func CreateTCPProxy(ctx context.Context, client *client.Client, externalHost str
 	}
 
 	containerCfg := container.Config{
-		Image: "ghcr.io/shyim/tanjun-tcp-proxy:latest",
+		Image: "ghcr.io/shyim/tanjun/tcp-proxy:v1",
 		Cmd:   []string{fmt.Sprintf("%s:%s", inspect.NetworkSettings.Networks[networkName].IPAddress, port), "6879"},
 		Env: []string{
 			"TLS_CA_CERT=" + base64.StdEncoding.EncodeToString(keys.CaCert),

@@ -221,12 +221,12 @@ func createSysctlContainer(ctx context.Context, client *client.Client) error {
 		return nil
 	}
 
-	if err := PullImageIfNotThere(ctx, client, "ghcr.io/shyim/tanjun-sysctl:latest"); err != nil {
+	if err := PullImageIfNotThere(ctx, client, "ghcr.io/shyim/tanjun/sysctl:v1"); err != nil {
 		return err
 	}
 
 	cfg := &container.Config{
-		Image: "ghcr.io/shyim/tanjun-sysctl:latest",
+		Image: "ghcr.io/shyim/tanjun/sysctl:v1",
 		Labels: map[string]string{
 			"tanjun":                     "true",
 			"com.docker.compose.project": "tanjun",
