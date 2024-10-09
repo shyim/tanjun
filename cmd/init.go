@@ -35,7 +35,7 @@ var initCmd = &cobra.Command{
 			Label: "Image Name (this will be used to push and pull the image, e.g ghcr.io/username/project)",
 		}
 
-		cfg.ImageName, _ = prompt.Run()
+		cfg.Image, _ = prompt.Run()
 
 		prompt = promptui.Prompt{
 			Label: "SSH Address (this will be used to connect to the server)",

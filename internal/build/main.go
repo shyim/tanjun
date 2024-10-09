@@ -213,7 +213,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		},
 	}
 
-	imageName := fmt.Sprintf("%s:%s", config.ImageName, namesgenerator.GetRandomName(1))
+	imageName := fmt.Sprintf("%s:%s", config.Image, namesgenerator.GetRandomName(1))
 
 	_, err = builder.Solve(ctx, def, buildkit.SolveOpt{
 		Session: []session.Attachable{authprovider.NewDockerAuthProvider(dockerConfig.LoadDefaultConfigFile(os.Stderr), nil)},

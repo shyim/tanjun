@@ -54,8 +54,8 @@ func removeContainers(ctx context.Context, client *client.Client, containers []t
 }
 
 func findPortMapping(cfg DeployConfiguration, container types.ContainerJSON) string {
-	if cfg.ProjectConfig.Proxy.Port != 0 {
-		return string(rune(cfg.ProjectConfig.Proxy.Port))
+	if cfg.ProjectConfig.Proxy.AppPort != 0 {
+		return string(rune(cfg.ProjectConfig.Proxy.AppPort))
 	}
 
 	for p, _ := range container.NetworkSettings.Ports {

@@ -248,7 +248,41 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 	proxyHost := containerInspect.NetworkSettings.Networks["tanjun-public"].IPAddress
 	proxyPort := findPortMapping(deployCfg, containerInspect)
 
-	kamalCmd := []string{"kamal-proxy", "deploy", "--host", deployCfg.ProjectConfig.Proxy.Host, "--forward-headers", "--health-check-path", deployCfg.ProjectConfig.Proxy.HealthCheckUrl, "--target", fmt.Sprintf("%s:%s", proxyHost, proxyPort), deployCfg.Name}
+	kamalCmd := []string{
+		"kamal-proxy",
+		"deploy",
+		"--host", deployCfg.ProjectConfig.Proxy.Host,
+		"--forward-headers",
+		"--health-check-path", deployCfg.ProjectConfig.Proxy.HealthCheck.Path,
+		"--health-check-interval", fmt.Sprintf("%ds", deployCfg.ProjectConfig.Proxy.HealthCheck.Interval),
+		"--health-check-timeout", fmt.Sprintf("%ds", deployCfg.ProjectConfig.Proxy.HealthCheck.Timeout),
+		"--target", fmt.Sprintf("%s:%s", proxyHost, proxyPort), deployCfg.Name,
+		"--target-timeout", fmt.Sprintf("%ds", deployCfg.ProjectConfig.Proxy.ResponseTimeout),
+	}
+
+	if deployCfg.ProjectConfig.Proxy.SSL {
+		kamalCmd = append(kamalCmd, "--tls")
+	}
+
+	if deployCfg.ProjectConfig.Proxy.Buffering.Requests {
+		kamalCmd = append(kamalCmd, "--buffer-requests")
+	}
+
+	if deployCfg.ProjectConfig.Proxy.Buffering.Responses {
+		kamalCmd = append(kamalCmd, "--buffer-responses")
+	}
+
+	if deployCfg.ProjectConfig.Proxy.Buffering.MaxRequestBody > 0 {
+		kamalCmd = append(kamalCmd, "--max-request-body", fmt.Sprintf("%d", deployCfg.ProjectConfig.Proxy.Buffering.MaxRequestBody))
+	}
+
+	if deployCfg.ProjectConfig.Proxy.Buffering.MaxResponseBody > 0 {
+		kamalCmd = append(kamalCmd, "--max-response-body", fmt.Sprintf("%d", deployCfg.ProjectConfig.Proxy.Buffering.MaxResponseBody))
+	}
+
+	if deployCfg.ProjectConfig.Proxy.Buffering.Memory > 0 {
+		kamalCmd = append(kamalCmd, "--buffer-memory", fmt.Sprintf("%d", deployCfg.ProjectConfig.Proxy.Buffering.Memory))
+	}
 
 	if err := configureKamalService(ctx, client, kamalCmd); err != nil {
 		return err

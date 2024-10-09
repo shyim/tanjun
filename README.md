@@ -35,18 +35,19 @@ server:
 # The name of the application, one server can contain multiple applications
 name: app-name
 # The image name to use to push and pull the image
-imageName: "ghcr.io/shyim/test"
+image: "ghcr.io/shyim/test"
 proxy:
   # The external reachable domain
   host: localhost
   # A healthcheck url to check if the application is running
-  healthCheckUrl: /admin
+  healthcheck:
+    path: /admin
 app:
   env:
     # set a static environment value
     APP_URL:
       value: 'http://localhost'
-  initialSecrets:
+  initial_secrets:
     # Generate a random string for the APP_SECRET environment variable and store it to keep it the same
     APP_SECRET:
       expr: 'randomString(32)'

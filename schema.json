@@ -5,7 +5,7 @@
   "$defs": {
     "ProjectApp": {
       "properties": {
-        "dockerFile": {
+        "dockerfile": {
           "type": "string"
         },
         "env": {
@@ -14,7 +14,7 @@
           },
           "type": "object"
         },
-        "initialSecrets": {
+        "initial_secrets": {
           "additionalProperties": {
             "$ref": "#/$defs/ProjectInitialSecrets"
           },
@@ -59,7 +59,7 @@
         "name": {
           "type": "string"
         },
-        "imageName": {
+        "image": {
           "type": "string"
         },
         "server": {
@@ -85,15 +85,57 @@
             "host": {
               "type": "string"
             },
-            "port": {
+            "app_port": {
               "type": "integer"
             },
-            "healthCheckUrl": {
-              "type": "string"
+            "healthcheck": {
+              "properties": {
+                "interval": {
+                  "type": "integer"
+                },
+                "timeout": {
+                  "type": "integer"
+                },
+                "path": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "type": "object"
+            },
+            "response_timeout": {
+              "type": "integer"
+            },
+            "ssl": {
+              "type": "boolean"
+            },
+            "Buffering": {
+              "properties": {
+                "requests": {
+                  "type": "boolean"
+                },
+                "responses": {
+                  "type": "boolean"
+                },
+                "max_request_body": {
+                  "type": "integer"
+                },
+                "max_response_body": {
+                  "type": "integer"
+                },
+                "memory": {
+                  "type": "integer"
+                }
+              },
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           "additionalProperties": false,
-          "type": "object"
+          "type": "object",
+          "required": [
+            "host"
+          ]
         },
         "app": {
           "$ref": "#/$defs/ProjectApp"
@@ -109,7 +151,7 @@
       "type": "object",
       "required": [
         "name",
-        "imageName",
+        "image",
         "server"
       ]
     },

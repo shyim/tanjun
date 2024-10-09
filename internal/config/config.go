@@ -9,17 +9,30 @@ import (
 )
 
 type ProjectConfig struct {
-	Name      string `yaml:"name" jsonschema:"required"`
-	ImageName string `yaml:"imageName" jsonschema:"required"`
-	Server    struct {
+	Name   string `yaml:"name" jsonschema:"required"`
+	Image  string `yaml:"image" jsonschema:"required"`
+	Server struct {
 		Address  string `yaml:"address" jsonschema:"required"`
 		Username string `yaml:"username,omitempty"`
 		Port     int    `yaml:"port,omitempty"`
 	} `yaml:"server" jsonschema:"required"`
 	Proxy struct {
-		Host           string `yaml:"host,omitempty"`
-		Port           int    `yaml:"port,omitempty"`
-		HealthCheckUrl string `yaml:"healthCheckUrl"`
+		Host        string `yaml:"host,omitempty" jsonschema:"required"`
+		AppPort     int    `yaml:"app_port,omitempty"`
+		HealthCheck struct {
+			Interval int    `yaml:"interval,omitempty"`
+			Timeout  int    `yaml:"timeout,omitempty"`
+			Path     string `yaml:"path,omitempty"`
+		} `yaml:"healthcheck,omitempty"`
+		ResponseTimeout int  `yaml:"response_timeout,omitempty"`
+		SSL             bool `yaml:"ssl,omitempty"`
+		Buffering       struct {
+			Requests        bool `yaml:"requests,omitempty"`
+			Responses       bool `yaml:"responses,omitempty"`
+			MaxRequestBody  int  `yaml:"max_request_body,omitempty"`
+			MaxResponseBody int  `yaml:"max_response_body,omitempty"`
+			Memory          int  `yaml:"memory,omitempty"`
+		}
 	} `yaml:"proxy"`
 	App      ProjectApp                `yaml:"app,omitempty"`
 	Services map[string]ProjectService `yaml:"services,omitempty"`
@@ -36,9 +49,9 @@ type ProjectCronjob struct {
 }
 
 type ProjectApp struct {
-	Dockerfile     string                           `yaml:"dockerFile"`
+	Dockerfile     string                           `yaml:"dockerfile"`
 	Environment    map[string]ProjectEnvironment    `yaml:"env,omitempty"`
-	InitialSecrets map[string]ProjectInitialSecrets `yaml:"initialSecrets,omitempty"`
+	InitialSecrets map[string]ProjectInitialSecrets `yaml:"initial_secrets,omitempty"`
 	Mounts         []ProjectMount                   `yaml:"mounts,omitempty"`
 	Workers        map[string]ProjectWorker         `yaml:"workers,omitempty"`
 	Cronjobs       []ProjectCronjob                 `yaml:"cronjobs,omitempty"`
@@ -102,7 +115,7 @@ func validateConfig(projectConfig *ProjectConfig) error {
 		return fmt.Errorf("missing project name")
 	}
 
-	if projectConfig.ImageName == "" {
+	if projectConfig.Image == "" {
 		return fmt.Errorf("missing image name")
 	}
 
@@ -144,7 +157,19 @@ func (p *ProjectConfig) FillDefaults() {
 		p.Server.Username = "root"
 	}
 
-	if p.Proxy.HealthCheckUrl == "" {
-		p.Proxy.HealthCheckUrl = "/"
+	if p.Proxy.HealthCheck.Path == "" {
+		p.Proxy.HealthCheck.Path = "/"
+	}
+
+	if p.Proxy.HealthCheck.Timeout == 0 {
+		p.Proxy.HealthCheck.Timeout = 5
+	}
+
+	if p.Proxy.HealthCheck.Interval == 0 {
+		p.Proxy.HealthCheck.Interval = 1
+	}
+
+	if p.Proxy.ResponseTimeout == 0 {
+		p.Proxy.ResponseTimeout = 30
 	}
 }
