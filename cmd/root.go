@@ -10,10 +10,12 @@ import (
 
 var configFile = ".tanjun.yml"
 var projectRoot = ""
+var version = "dev"
 
 var rootCmd = &cobra.Command{
-	Use:   "tanjun",
-	Short: "Tanjun is a simple Docker based deployment solution for self-hosting",
+	Use:     "tanjun",
+	Short:   "Tanjun is a simple Docker based deployment solution for self-hosting",
+	Version: version,
 }
 
 func Execute(ctx context.Context) {

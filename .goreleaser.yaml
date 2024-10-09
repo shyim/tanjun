@@ -10,7 +10,7 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
-    ldflags: -s -w
+    ldflags: -s -w -X 'github.com/shyim/tanjun/cmd.version={{ .Version }}'
     flags:
       - -trimpath
     goos:
@@ -81,3 +81,24 @@ nfpms:
       - apk
       - deb
       - rpm
+
+brews:
+  - repository:
+      owner: shyim
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    commit_author:
+      name: Shyim
+      email: s.sayakci@gmail.com
+    goarm: "7"
+    homepage: https://shyim.me
+    description: Simple Dockerized Deployment
+    license: MIT
+    directory: Formula
+    test: |
+      system "#{bin}/tanjun --version"
+    install: |-
+      bin.install "tanjun"
+      bash_completion.install "completions/tanjun.bash" => "_tanjun"
+      zsh_completion.install "completions/tanjun.zsh" => "_tanjun"
+      fish_completion.install "completions/tanjun.fish"

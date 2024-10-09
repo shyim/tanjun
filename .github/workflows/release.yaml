@@ -32,6 +32,12 @@ jobs:
       - name: Install Syft
         uses: anchore/sbom-action/download-syft@v0.17.2
 
+      - uses: octo-sts/action@v1.0.0
+        id: sts-homebrew
+        with:
+          scope: shyim/homebrew-tap
+          identity: release
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -39,3 +45,4 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ steps.sts-homebrew.outputs.token }}
