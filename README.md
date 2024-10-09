@@ -13,6 +13,14 @@ It's similar to [Kamal Deploy](https://kamal-deploy.org/) but with a different a
 
 A external reachable server with Docker installed.
 
+## Installation
+
+```bash
+brew install shyim/tap/tanjun
+```
+
+or download the binary from the [releases](https://github.com/shyim/tanjun/releases)
+
 ## Commands
 
 - `tanjun init` - Initialize a new Tanjun project.
