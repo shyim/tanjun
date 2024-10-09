@@ -379,7 +379,7 @@ func createEnvironmentNetwork(ctx context.Context, c *client.Client, deployCfg D
 		return nil
 	}
 
-	_, err = c.NetworkCreate(ctx, deployCfg.NetworkName, types.NetworkCreate{
+	_, err = c.NetworkCreate(ctx, deployCfg.NetworkName, network.CreateOptions{
 		Labels: map[string]string{
 			"tanjun":         "true",
 			"tanjun.project": fmt.Sprintf("%s", deployCfg.Name),

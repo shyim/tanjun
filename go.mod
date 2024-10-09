@@ -9,7 +9,9 @@ require (
 	github.com/expr-lang/expr v1.16.9
 	github.com/gosimple/slug v1.14.0
 	github.com/invopop/jsonschema v0.12.0
+	github.com/manifoldco/promptui v0.9.0
 	github.com/moby/buildkit v0.16.0
+	github.com/moby/patternmatcher v0.6.0
 	github.com/moby/term v0.5.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.1.0
@@ -30,6 +32,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/containerd/containerd v1.7.21 // indirect
 	github.com/containerd/containerd/api v1.7.19 // indirect
@@ -64,7 +67,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
-	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/signal v0.7.1 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect

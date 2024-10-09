@@ -13,17 +13,16 @@ type ProjectConfig struct {
 	ImageName string `yaml:"imageName" jsonschema:"required"`
 	Server    struct {
 		Address  string `yaml:"address" jsonschema:"required"`
-		Username string `yaml:"username"`
-		Port     int    `yaml:"port"`
+		Username string `yaml:"username,omitempty"`
+		Port     int    `yaml:"port,omitempty"`
 	} `yaml:"server" jsonschema:"required"`
 	Proxy struct {
-		Host           string `yaml:"host"`
-		Port           int    `yaml:"port"`
+		Host           string `yaml:"host,omitempty"`
+		Port           int    `yaml:"port,omitempty"`
 		HealthCheckUrl string `yaml:"healthCheckUrl"`
 	} `yaml:"proxy"`
-	LocalBuild bool                      `yaml:"localBuild"`
-	App        ProjectApp                `yaml:"app"`
-	Services   map[string]ProjectService `yaml:"services"`
+	App      ProjectApp                `yaml:"app,omitempty"`
+	Services map[string]ProjectService `yaml:"services,omitempty"`
 }
 
 type ProjectWorker struct {
@@ -38,15 +37,15 @@ type ProjectCronjob struct {
 
 type ProjectApp struct {
 	Dockerfile     string                           `yaml:"dockerFile"`
-	Environment    map[string]ProjectEnvironment    `yaml:"env"`
-	InitialSecrets map[string]ProjectInitialSecrets `yaml:"initialSecrets"`
-	Mounts         []ProjectMount                   `yaml:"mounts"`
-	Workers        map[string]ProjectWorker         `yaml:"workers"`
-	Cronjobs       []ProjectCronjob                 `yaml:"cronjobs"`
+	Environment    map[string]ProjectEnvironment    `yaml:"env,omitempty"`
+	InitialSecrets map[string]ProjectInitialSecrets `yaml:"initialSecrets,omitempty"`
+	Mounts         []ProjectMount                   `yaml:"mounts,omitempty"`
+	Workers        map[string]ProjectWorker         `yaml:"workers,omitempty"`
+	Cronjobs       []ProjectCronjob                 `yaml:"cronjobs,omitempty"`
 	Hooks          struct {
-		Setup   string `yaml:"setup"`
-		Changed string `yaml:"changed"`
-	} `yaml:"hooks"`
+		Setup   string `yaml:"setup,omitempty"`
+		Changed string `yaml:"changed,omitempty"`
+	} `yaml:"hooks,omitempty"`
 }
 
 type ProjectInitialSecrets struct {
@@ -85,7 +84,7 @@ func CreateConfig(file string) (*ProjectConfig, error) {
 		return nil, err
 	}
 
-	fillDefaults(&cfg)
+	cfg.FillDefaults()
 
 	if err := validateConfig(&cfg); err != nil {
 		return nil, err
@@ -128,7 +127,7 @@ func validateCronjobs(cronjobs []ProjectCronjob) error {
 	return nil
 }
 
-func fillDefaults(p *ProjectConfig) {
+func (p *ProjectConfig) FillDefaults() {
 	if p.App.Environment == nil {
 		p.App.Environment = make(map[string]ProjectEnvironment)
 	}

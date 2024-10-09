@@ -9,6 +9,7 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/gosimple/slug"
+	"strings"
 )
 
 func DestroyProject(ctx context.Context, client *client.Client, name string) error {
@@ -75,5 +76,13 @@ func DestroyProject(ctx context.Context, client *client.Client, name string) err
 	kv.Delete(cfg.ContainerPrefix() + "_secrets")
 	kv.Delete(cfg.ContainerPrefix() + "_setup")
 
-	return configureKamalService(ctx, client, []string{"kamal-proxy", "remove", cfg.Name})
+	if err := configureKamalService(ctx, client, []string{"kamal-proxy", "remove", cfg.Name}); err != nil {
+		if strings.Contains(err.Error(), "service not found") {
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
 }

@@ -95,9 +95,6 @@
           "additionalProperties": false,
           "type": "object"
         },
-        "localBuild": {
-          "type": "boolean"
-        },
         "app": {
           "$ref": "#/$defs/ProjectApp"
         },
@@ -173,10 +170,6 @@
         },
         "path": {
           "type": "string"
-        },
-        "owner": {
-          "type": "string",
-          "default": "1000:1000"
         }
       },
       "additionalProperties": false,

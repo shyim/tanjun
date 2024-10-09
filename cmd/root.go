@@ -24,6 +24,7 @@ func Execute(ctx context.Context) {
 
 func init() {
 	rootCmd.SilenceErrors = true
+	rootCmd.SilenceUsage = true
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", configFile, "Path to the config file")
 	rootCmd.PersistentFlags().StringVar(&projectRoot, "project-root", "", "Path to the project root, otherwise it will use the current directory")
 
