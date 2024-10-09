@@ -1,9 +1,10 @@
 # Tanjun
 
-::: warning
-This tool is still in development and is not yet ready for use.
+> [!IMPORTANT]
+> This tool is still in development and is not yet ready for use.
 
-Tanjun is a Dockerized Deployment Tool to deploy applications to external servers and cloud providers. 
+Tanjun (which means Simple in Japanese)
+is a Dockerized Deployment Tool to deploy applications to external servers and cloud providers. 
 It is designed to be straightforward to use and keep everything simple for the user.
 
 It's similar to [Kamal Deploy](https://kamal-deploy.org/) but with a different approach.
@@ -14,8 +15,10 @@ A external reachable server with Docker installed.
 
 ## Commands
 
+- `tanjun init` - Initialize a new Tanjun project.
 - `tanjun setup` - Setup Proxy Server on the remote server (one time).
 - `tanjun deploy` - Deploy the current application to the remote server.
+- `tanjun destroy` - Destroy the current application on the remote server.
 - `tanjun shell` - Open a shell to the remote server contain your application.
 - `tanjun logs` - Show the logs of the application running on the remote server.
 - `tanjun forward` - Forward the port of the application running on the remote server to your local machine.
@@ -24,10 +27,11 @@ A external reachable server with Docker installed.
 
 ```yaml
 # .tanjun.yml
-# yaml-language-server: $schema=schema.json
 server:
-  # IP to oru server
+  # IP to your server
   address: 127.0.0.1
+  port: 22
+  username: root
 # The name of the application, one server can contain multiple applications
 name: app-name
 # The image name to use to push and pull the image
