@@ -9,7 +9,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
-func configureKamalService(ctx context.Context, client *client.Client, cfg DeployConfiguration, address string) error {
+func configureKamalService(ctx context.Context, client *client.Client, cmd []string) error {
 	opts := container.ListOptions{
 		Filters: filters.NewArgs(),
 	}
@@ -27,7 +27,7 @@ func configureKamalService(ctx context.Context, client *client.Client, cfg Deplo
 	}
 
 	exec, err := client.ContainerExecCreate(ctx, containers[0].ID, container.ExecOptions{
-		Cmd:          []string{"kamal-proxy", "deploy", "--host", cfg.ProjectConfig.Proxy.Host, "--forward-headers", "--health-check-path", cfg.ProjectConfig.Proxy.HealthCheckUrl, "--target", address, cfg.Name},
+		Cmd:          cmd,
 		AttachStdout: true,
 		AttachStderr: true,
 	})

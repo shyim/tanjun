@@ -248,7 +248,9 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 	proxyHost := containerInspect.NetworkSettings.Networks["tanjun-public"].IPAddress
 	proxyPort := findPortMapping(deployCfg, containerInspect)
 
-	if err := configureKamalService(ctx, client, deployCfg, fmt.Sprintf("%s:%s", proxyHost, proxyPort)); err != nil {
+	kamalCmd := []string{"kamal-proxy", "deploy", "--host", deployCfg.ProjectConfig.Proxy.Host, "--forward-headers", "--health-check-path", deployCfg.ProjectConfig.Proxy.HealthCheckUrl, "--target", fmt.Sprintf("%s:%s", proxyHost, proxyPort), deployCfg.Name}
+
+	if err := configureKamalService(ctx, client, kamalCmd); err != nil {
 		return err
 	}
 
