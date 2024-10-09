@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/shyim/tanjun/internal/config/project-config",
+  "$ref": "#/$defs/ProjectConfig",
+  "$defs": {
+    "ProjectApp": {
+      "properties": {
+        "dockerFile": {
+          "type": "string"
+        },
+        "env": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ProjectEnvironment"
+          },
+          "type": "object"
+        },
+        "initialSecrets": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ProjectInitialSecrets"
+          },
+          "type": "object"
+        },
+        "mounts": {
+          "items": {
+            "$ref": "#/$defs/ProjectMount"
+          },
+          "type": "array"
+        },
+        "workers": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ProjectWorker"
+          },
+          "type": "object"
+        },
+        "cronjobs": {
+          "items": {
+            "$ref": "#/$defs/ProjectCronjob"
+          },
+          "type": "array"
+        },
+        "hooks": {
+          "properties": {
+            "setup": {
+              "type": "string"
+            },
+            "changed": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ProjectConfig": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "imageName": {
+          "type": "string"
+        },
+        "server": {
+          "properties": {
+            "address": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "address"
+          ]
+        },
+        "proxy": {
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer"
+            },
+            "healthCheckUrl": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "localBuild": {
+          "type": "boolean"
+        },
+        "app": {
+          "$ref": "#/$defs/ProjectApp"
+        },
+        "services": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ProjectService"
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "imageName",
+        "server"
+      ]
+    },
+    "ProjectCronjob": {
+      "properties": {
+        "schedule": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ProjectEnvironment": {
+      "oneOf": [
+        {
+          "required": [
+            "value"
+          ],
+          "title": "value"
+        },
+        {
+          "required": [
+            "expr"
+          ],
+          "title": "expr"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "expr": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ProjectInitialSecrets": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "expr"
+      ]
+    },
+    "ProjectMount": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string",
+          "default": "1000:1000"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "path"
+      ]
+    },
+    "ProjectService": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "mysql:8.0",
+            "mysql:8.4",
+            "valkey:7.2"
+          ]
+        },
+        "settings": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ProjectWorker": {
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "replicas": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    }
+  }
+}
