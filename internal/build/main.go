@@ -1,11 +1,15 @@
 package build
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/moby/buildkit/client/llb"
+	"github.com/moby/patternmatcher/ignorefile"
 	"os"
 	"path"
+	"slices"
 	"strings"
 	"time"
 
@@ -108,9 +112,31 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		}
 	}
 
+	var dockerIgnore []string
+
+	if _, err := os.Stat(path.Join(root, ".dockerignore")); err == nil {
+		dockerIgnoreFile, err := os.ReadFile(path.Join(root, ".dockerignore"))
+
+		if err != nil {
+			return "", err
+		}
+
+		dockerIgnore, err = ignorefile.ReadAll(bytes.NewBuffer(dockerIgnoreFile))
+
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if !slices.Contains(dockerIgnore, ".tanjun.yml") {
+		dockerIgnore = append(dockerIgnore, ".tanjun.yml")
+	}
+
 	caps := pb.Caps.CapSet(pb.Caps.All())
 
+	local := llb.Local("context", llb.ExcludePatterns(dockerIgnore))
 	state, img, _, _, err := dockerfile2llb.Dockerfile2LLB(ctx, dockerFile, dockerfile2llb.ConvertOpt{
+		MainContext:  &local,
 		MetaResolver: imagemetaresolver.Default(),
 		LLBCaps:      &caps,
 		TargetPlatform: &imageSpecsV1.Platform{
