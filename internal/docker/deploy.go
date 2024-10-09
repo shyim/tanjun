@@ -73,8 +73,6 @@ func getCronjobEnvironmentContainers(ctx context.Context, client *client.Client,
 }
 
 func getAppContainerConfiguration(deployCfg DeployConfiguration) (*container.Config, *container.HostConfig, *network.NetworkingConfig) {
-	//routerName := fmt.Sprintf("tanjun_%s_default", deployCfg.Name)
-
 	containerCfg := &container.Config{
 		Image: deployCfg.ImageName,
 		Labels: map[string]string{
@@ -82,18 +80,6 @@ func getAppContainerConfiguration(deployCfg DeployConfiguration) (*container.Con
 
 			"com.docker.compose.project": deployCfg.ContainerPrefix(),
 			"com.docker.compose.service": "web",
-
-			//fmt.Sprintf("traefik.http.middlewares.%s_redirect.redirectscheme.scheme", routerName):    "https",
-			//fmt.Sprintf("traefik.http.middlewares.%s_redirect.redirectscheme.permanent", routerName): "true",
-
-			//fmt.Sprintf("traefik.http.routers.%s.rule", routerName):        fmt.Sprintf("Host(`%s`)", deployCfg.C),
-			//fmt.Sprintf("traefik.http.routers.%s.entrypoints", routerName): "web",
-			//fmt.Sprintf("traefik.http.routers.%s.middlewares", routerName): fmt.Sprintf("%s_redirect", routerName),
-			//
-			//fmt.Sprintf("traefik.http.routers.%s_ssl.rule", routerName):             fmt.Sprintf("Host(`%s`)", deployCfg.DefaultDomain),
-			//fmt.Sprintf("traefik.http.routers.%s_ssl.entrypoints", routerName):      "websecure",
-			//fmt.Sprintf("traefik.http.routers.%s_ssl.tls", routerName):              "true",
-			//fmt.Sprintf("traefik.http.routers.%s_ssl.tls.certresolver", routerName): "letsencrypt",
 
 			"tanjun":         "true",
 			"tanjun.app":     "true",
@@ -323,7 +309,7 @@ func createAppServerVolumes(ctx context.Context, client *client.Client, deployCf
 
 			containerCfg := &container.Config{
 				Image: "alpine:latest",
-				Cmd:   []string{"sh", "-c", fmt.Sprintf("chown -R %s /volume", userId)},
+				Cmd:   []string{"sh", "-c", fmt.Sprintf("chown -R %s:%s /volume", userId, userId)},
 			}
 
 			hostCfg := &container.HostConfig{

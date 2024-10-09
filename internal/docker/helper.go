@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"bufio"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -10,6 +11,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
+	"io"
 	"os"
 	"slices"
 	"strings"
@@ -115,11 +118,14 @@ func determineUidOfAppContainer(ctx context.Context, client *client.Client, imag
 	case <-statusCh:
 	}
 
-	line, _, err := attach.Reader.ReadLine()
+	pr, pw := io.Pipe()
 
-	if err != nil {
-		return "", err
-	}
+	go func() {
+		stdcopy.StdCopy(pw, io.Discard, attach.Reader)
+	}()
 
-	return string(line), nil
+	scanner := bufio.NewScanner(pr)
+	scanner.Scan()
+
+	return scanner.Text(), nil
 }
