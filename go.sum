@@ -191,8 +191,6 @@ github.com/shibumi/go-pathspec v1.3.0 h1:QUyMZhFo0Md5B8zV8x2tesohbb5kfbpTi9rBnKh
 github.com/shibumi/go-pathspec v1.3.0/go.mod h1:Xutfslp817l2I1cZvgcfeMQJG5QnU2lh5tVaaMCl3jE=
 github.com/shyim/go-version v0.0.0-20240530110323-4b7091cee42c h1:3venOxJzcKW4Xi5N9ipFNrnwAS4g1yTOTcBssDHHgQA=
 github.com/shyim/go-version v0.0.0-20240530110323-4b7091cee42c/go.mod h1:z47ygE4N7EC0H58FP5j5cXZtl1pSnfjwYJsHtiVtcwU=
-github.com/shyim/wolfi-docker-buildpack v0.0.0-20241007200840-a433e196f1fb h1:UnRrgYo++Zg19ZInc1+akbwJHnAZKegRFqWXA9IgWi8=
-github.com/shyim/wolfi-docker-buildpack v0.0.0-20241007200840-a433e196f1fb/go.mod h1:VCEARKWORtAkhjNMlk7WsaMZ4FT6n5Tf5J5ceHq/YZg=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=
 github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
 github.com/spdx/tools-golang v0.5.3 h1:ialnHeEYUC4+hkm5vJm4qz2x+oEJbS0mAMFrNXdQraY=

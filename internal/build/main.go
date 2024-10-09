@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/patternmatcher/ignorefile"
+	"github.com/shyim/tanjun/internal/buildpack"
 	"os"
 	"path"
 	"slices"
@@ -27,7 +28,6 @@ import (
 	imageSpecsV1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
-	"github.com/shyim/wolfi-docker-buildpack/buildpack"
 	"github.com/tonistiigi/fsutil"
 )
 
