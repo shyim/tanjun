@@ -38,7 +38,7 @@ func Helper(u *url.URL) (*connhelper.ConnectionHelper, error) {
 	pr, pw := io.Pipe()
 
 	go func() {
-		stdcopy.StdCopy(pw, io.Discard, conn.Reader)
+		_, _ = stdcopy.StdCopy(pw, io.Discard, conn.Reader)
 	}()
 
 	converter := dockerNetConn{org: conn.Conn, pr: pr}

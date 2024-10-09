@@ -27,7 +27,7 @@ func startCronjobs(ctx context.Context, client *client.Client, deployConfig Depl
 	containerCfg.Labels = map[string]string{
 		"com.docker.compose.project": deployConfig.ContainerPrefix(),
 		"tanjun":                     "true",
-		"tanjun.project":             fmt.Sprintf("%s", deployConfig.Name),
+		"tanjun.project":             deployConfig.Name,
 		"tanjun.cronjob":             "app",
 		"ofelia.enabled":             "true",
 	}
@@ -70,7 +70,7 @@ func startOfelia(ctx context.Context, client *client.Client, deployConfig Deploy
 			"com.docker.compose.project": deployConfig.ContainerPrefix(),
 			"com.docker.compose.service": "ofelia",
 			"tanjun":                     "true",
-			"tanjun.project":             fmt.Sprintf("%s", deployConfig.Name),
+			"tanjun.project":             deployConfig.Name,
 			"tanjun.cronjob":             "ofelia",
 		},
 	}

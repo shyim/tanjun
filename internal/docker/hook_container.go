@@ -25,7 +25,7 @@ func runHookInContainer(ctx context.Context, client *client.Client, deployCfg De
 			"com.docker.compose.project": deployCfg.ContainerPrefix(),
 			"com.docker.compose.service": "hook",
 			"tanjun":                     "true",
-			"tanjun.project":             fmt.Sprintf("%s", deployCfg.Name),
+			"tanjun.project":             deployCfg.Name,
 		},
 	}
 

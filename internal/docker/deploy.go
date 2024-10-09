@@ -83,7 +83,7 @@ func getAppContainerConfiguration(deployCfg DeployConfiguration) (*container.Con
 
 			"tanjun":         "true",
 			"tanjun.app":     "true",
-			"tanjun.project": fmt.Sprintf("%s", deployCfg.Name),
+			"tanjun.project": deployCfg.Name,
 		},
 		Env: deployCfg.GetEnvironmentVariables(),
 	}
@@ -301,7 +301,7 @@ func createAppServerVolumes(ctx context.Context, client *client.Client, deployCf
 				Name: expectedVolumeName,
 				Labels: map[string]string{
 					"tanjun":         "true",
-					"tanjun.project": fmt.Sprintf("%s", deployCfg.Name),
+					"tanjun.project": deployCfg.Name,
 				},
 			})
 
@@ -358,7 +358,7 @@ func addAppServerVolumes(deployCfg DeployConfiguration, hostCfg *container.HostC
 
 				Labels: map[string]string{
 					"tanjun":         "true",
-					"tanjun.project": fmt.Sprintf("%s", deployCfg.Name),
+					"tanjun.project": deployCfg.Name,
 				},
 			},
 		})
@@ -382,7 +382,7 @@ func createEnvironmentNetwork(ctx context.Context, c *client.Client, deployCfg D
 	_, err = c.NetworkCreate(ctx, deployCfg.NetworkName, network.CreateOptions{
 		Labels: map[string]string{
 			"tanjun":         "true",
-			"tanjun.project": fmt.Sprintf("%s", deployCfg.Name),
+			"tanjun.project": deployCfg.Name,
 		},
 	})
 

@@ -47,7 +47,7 @@ func (m MySQLService) Deploy(ctx context.Context, client *client.Client, service
 			VolumeOptions: &mount.VolumeOptions{
 				Labels: map[string]string{
 					"tanjun":         "true",
-					"tanjun.project": fmt.Sprintf("%s", deployCfg.Name),
+					"tanjun.project": deployCfg.Name,
 				},
 			},
 		},

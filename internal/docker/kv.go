@@ -93,7 +93,7 @@ func CreateKVConnection(ctx context.Context, client *client.Client) (*KvClient, 
 	pr, pw := io.Pipe()
 
 	go func() {
-		stdcopy.StdCopy(pw, io.Discard, resp.Reader)
+		_, _ = stdcopy.StdCopy(pw, io.Discard, resp.Reader)
 	}()
 
 	return &KvClient{

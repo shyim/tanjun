@@ -135,7 +135,7 @@ func getDefaultServiceContainers(cfg DeployConfiguration, name string) (string, 
 			"com.docker.compose.project": cfg.ContainerPrefix(),
 			"com.docker.compose.service": name,
 			"tanjun":                     "true",
-			"tanjun.project":             fmt.Sprintf("%s", cfg.Name),
+			"tanjun.project":             cfg.Name,
 			"tanjun.service":             name,
 		},
 	}

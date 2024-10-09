@@ -121,7 +121,7 @@ func determineUidOfAppContainer(ctx context.Context, client *client.Client, imag
 	pr, pw := io.Pipe()
 
 	go func() {
-		stdcopy.StdCopy(pw, io.Discard, attach.Reader)
+		_, _ = stdcopy.StdCopy(pw, io.Discard, attach.Reader)
 	}()
 
 	scanner := bufio.NewScanner(pr)

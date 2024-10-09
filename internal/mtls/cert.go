@@ -124,16 +124,21 @@ func makeCert(caCert *x509.Certificate, caKey *rsa.PrivateKey, subject *pkix.Nam
 	}
 
 	certPEM := new(bytes.Buffer)
-	pem.Encode(certPEM, &pem.Block{
+
+	if err := pem.Encode(certPEM, &pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
-	})
+	}); err != nil {
+		return nil, nil, err
+	}
 
 	certKeyPEM := new(bytes.Buffer)
-	pem.Encode(certKeyPEM, &pem.Block{
+	if err := pem.Encode(certKeyPEM, &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(certKey),
-	})
+	}); err != nil {
+		return nil, nil, err
+	}
 
 	return certPEM.Bytes(), certKeyPEM.Bytes(), nil
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/shyim/tanjun/internal/streams"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 	"os"
 	"os/signal"
 	"runtime"
@@ -44,7 +44,7 @@ var shellCmd = &cobra.Command{
 			return err
 		}
 
-		tty := terminal.IsTerminal(0)
+		tty := term.IsTerminal(0)
 
 		execConfig := container.ExecOptions{
 			Tty:          tty,
@@ -68,8 +68,8 @@ var shellCmd = &cobra.Command{
 
 		out := streams.NewOut(os.Stdout)
 
-		if terminal.IsTerminal(0) {
-			width, height, err := terminal.GetSize(0)
+		if term.IsTerminal(0) {
+			width, height, err := term.GetSize(0)
 
 			if err != nil {
 				return err
@@ -90,8 +90,16 @@ var shellCmd = &cobra.Command{
 		}
 
 		defer resp.Close()
-		defer resp.CloseWrite()
-		defer resp.Conn.Close()
+
+		defer func() {
+			if err := resp.CloseWrite(); err != nil {
+				fmt.Println("Error closing write:", err)
+			}
+
+			if err := resp.Conn.Close(); err != nil {
+				fmt.Println("Error closing connection:", err)
+			}
+		}()
 
 		streamer := hijackedIOStreamer{
 			in:           streams.NewIn(os.Stdin),

@@ -33,7 +33,7 @@ func SetProjectSecrets(kv *KvClient, name string, secrets map[string]string) err
 		return err
 	}
 
-	if kv.Set(cfg.ContainerPrefix()+"_secrets", string(secret)) == false {
+	if !kv.Set(cfg.ContainerPrefix()+"_secrets", string(secret)) {
 		return fmt.Errorf("could not set secrets")
 	}
 

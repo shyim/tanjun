@@ -45,7 +45,7 @@ func startWorker(ctx context.Context, client *client.Client, deployCfg DeployCon
 				"com.docker.compose.service": workerName,
 				"tanjun":                     "true",
 				"tanjun.worker":              workerName,
-				"tanjun.project":             fmt.Sprintf("%s", deployCfg.Name),
+				"tanjun.project":             deployCfg.Name,
 			}
 
 			hostConfig.RestartPolicy = container.RestartPolicy{
