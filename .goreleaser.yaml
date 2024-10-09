@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+    - make gen-completions
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    ldflags: -s -w
+    flags:
+      - -trimpath
+    goos:
+      - linux
+      - windows
+      - darwin
+    ignore:
+      - goos: linux
+        goarch: '386'
+      - goos: windows
+        goarch: '386'
+      - goos: windows
+        goarch: 'arm64'
+
+release:
+  github:
+    owner: shyim
+    name: tanjun
+
+sboms:
+  - artifacts: archive
+  - id: source
+    artifacts: source
+
+checksum:
+  name_template: 'checksums.txt'
+
+archives:
+  - format: tar.gz
+    # this name template makes the OS and Arch compatible with the results of `uname`.
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    # use zip for windows archives
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - completions/*
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+nfpms:
+  -
+    package_name: tanjun
+    vendor: Shyim
+    homepage: https://github.com/shyim/tanjun
+    maintainer: Shyim <github@shyim.de>
+    description: Simple Dockerized Deployment
+    license: MIT
+    contents:
+      - src: ./completions/tanjun.bash
+        dst: /etc/bash_completion.d/tanjun
+      - src: ./completions/tanjun.fish
+        dst: /usr/share/fish/completions/tanjun.fish
+      - src: ./completions/tanjun.zsh
+        dst: /usr/local/share/zsh/site-functions/_tanjun
+    formats:
+      - apk
+      - deb
+      - rpm

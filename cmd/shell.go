@@ -11,11 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 	"os"
-	"os/signal"
-	"runtime"
 	"strings"
-	"syscall"
-	"time"
 )
 
 var shellCmd = &cobra.Command{
@@ -134,32 +130,6 @@ var shellCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(shellCmd)
 	shellCmd.PersistentFlags().String("service", "", "Specify service name to tail logs from, otherwise app is used")
-}
-
-func monitorTtySize(ctx context.Context, client *client.Client, id string, out *streams.Out) {
-	if runtime.GOOS == "windows" {
-		go func() {
-			prevH, prevW := out.GetTtySize()
-			for {
-				time.Sleep(time.Millisecond * 250)
-				h, w := out.GetTtySize()
-
-				if prevW != w || prevH != h {
-					resizeTty(ctx, client, id, out)
-				}
-				prevH = h
-				prevW = w
-			}
-		}()
-	} else {
-		sigchan := make(chan os.Signal, 1)
-		signal.Notify(sigchan, syscall.SIGWINCH)
-		go func() {
-			for range sigchan {
-				resizeTty(ctx, client, id, out)
-			}
-		}()
-	}
 }
 
 func resizeTty(ctx context.Context, client *client.Client, id string, out *streams.Out) {

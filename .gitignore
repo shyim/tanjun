@@ -1,2 +1,5 @@
 /.idea
 /tanjun
+/tanjun.*
+/completions
+dist/
