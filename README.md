@@ -26,7 +26,6 @@ A external reachable server with Docker installed.
 ## Example configuration
 
 ```yaml
-# .tanjun.yml
 server:
   # IP to your server
   address: 127.0.0.1
@@ -55,11 +54,11 @@ app:
   mounts:
     - name: jwt
       path: config/jwt
-  # Specify workers to run in background
+  # Specify workers to run in the background on the same built image
   workers:
     worker:
       command: 'php bin/console messenger:consume async --time-limit=3600'
-  # Specify cronjobs to run
+  # Specify cronjob to run
   cronjobs:
     - schedule: '@every 5m'
       command: 'php bin/console scheduled-task:run --no-wait'
