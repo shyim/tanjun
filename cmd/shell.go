@@ -90,7 +90,7 @@ var shellCmd = &cobra.Command{
 
 		defer func() {
 			if err := resp.CloseWrite(); err != nil {
-				log.Warnf("error closing write: %w", err)
+				log.Warnf("error closing write: %s", err)
 			}
 
 			if err := resp.Conn.Close(); err != nil {
