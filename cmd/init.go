@@ -2,14 +2,16 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/log"
+	"github.com/docker/docker/pkg/namesgenerator"
 	"github.com/gosimple/slug"
-	"github.com/manifoldco/promptui"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"os"
 	"strconv"
+	"strings"
 )
 
 var initCmd = &cobra.Command{
@@ -24,47 +26,74 @@ var initCmd = &cobra.Command{
 		cfg.FillDefaults()
 
 		cfg.App.Dockerfile = ""
+		namePlaceHolder := namesgenerator.GetRandomName(1)
 
-		prompt := promptui.Prompt{
-			Label: "Project Name",
+		sshPort := "22"
+
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewInput().
+					Title("Project Name").
+					Description("Name of the project").
+					Placeholder(namePlaceHolder).
+					Value(&cfg.Name).
+					Validate(func(s string) error {
+						if s == "" {
+							return fmt.Errorf("project name is required")
+						}
+
+						if !slug.IsSlug(s) {
+							return fmt.Errorf("project name should not contain whitespaces and special characters")
+						}
+
+						return nil
+					}),
+				huh.NewInput().
+					Title("Image Name").
+					Description("Image Name (this will be used to push and pull the image)").
+					PlaceholderFunc(func() string {
+						val := cfg.Name
+
+						if val == "" {
+							val = namePlaceHolder
+						}
+						return fmt.Sprintf("ghcr.io/%s/%s", os.Getenv("USER"), val)
+					}, &cfg.Name).
+					Validate(func(s string) error {
+						if s == "" {
+							return fmt.Errorf("image name is required")
+						}
+
+						if strings.Contains(s, ":") {
+							return fmt.Errorf("image name should not contain tag")
+						}
+
+						return nil
+					}).
+					Value(&cfg.Image),
+			).Title("Project"),
+			huh.NewGroup(
+				huh.NewInput().Title("SSH Address").Description("SSH Address (this will be used to connect to the server)").Value(&cfg.Server.Address),
+				huh.NewInput().Title("SSH User").Description("SSH User (this will be used to connect to the server)").Value(&cfg.Server.Username),
+				huh.NewInput().Title("SSH Port").Description("SSH Port (this will be used to connect to the server)").Value(&sshPort).Validate(func(s string) error {
+					if _, err := strconv.Atoi(s); err != nil {
+						return fmt.Errorf("port should be a number")
+					}
+
+					return nil
+				}),
+			).Title("Server"),
+			huh.NewGroup(
+				huh.NewInput().Title("Host").Description("At which host the app will be served").Placeholder("example.com").Value(&cfg.Proxy.Host),
+				huh.NewConfirm().Title("Use HTTPS").Description("Use HTTPS for the proxy").Value(&cfg.Proxy.SSL),
+			).Title("Proxy"),
+		)
+
+		if err := form.Run(); err != nil {
+			return err
 		}
 
-		cfg.Name, _ = prompt.Run()
-		cfg.Name = slug.Make(cfg.Name)
-
-		prompt = promptui.Prompt{
-			Label: "Image Name (this will be used to push and pull the image, e.g ghcr.io/username/project)",
-		}
-
-		cfg.Image, _ = prompt.Run()
-
-		prompt = promptui.Prompt{
-			Label: "SSH Address (this will be used to connect to the server)",
-		}
-
-		cfg.Server.Address, _ = prompt.Run()
-
-		prompt = promptui.Prompt{
-			Label:   "SSH User (this will be used to connect to the server)",
-			Default: "root",
-		}
-
-		cfg.Server.Username, _ = prompt.Run()
-
-		prompt = promptui.Prompt{
-			Label:   "SSH Port (this will be used to connect to the server)",
-			Default: "22",
-		}
-
-		serverPort, _ := prompt.Run()
-
-		cfg.Server.Port, _ = strconv.Atoi(serverPort)
-
-		prompt = promptui.Prompt{
-			Label: "Proxy Host (this will be where the app will be served)",
-		}
-
-		cfg.Proxy.Host, _ = prompt.Run()
+		cfg.Server.Port, _ = strconv.Atoi(sshPort)
 
 		bytes, err := yaml.Marshal(cfg)
 

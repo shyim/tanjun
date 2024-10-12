@@ -19,7 +19,7 @@ func CreateClientFromConfig(config *config.ProjectConfig) (*client.Client, error
 	}
 
 	hostScheme := fmt.Sprintf("ssh://%s@%s:%d", config.Server.Username, config.Server.Address, config.Server.Port)
-	helper, err := connhelper.GetConnectionHelper(hostScheme)
+	helper, err := connhelper.GetConnectionHelperWithSSHOpts(hostScheme, []string{"-o", "ServerAliveInterval=10"})
 	if err != nil {
 		return nil, err
 	}

@@ -164,6 +164,7 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 	}
 
 	if len(deployCfg.ProjectConfig.App.Hooks.Deploy) > 0 {
+		log.Infof("Running deploy hook")
 		if err := runHookInContainer(ctx, client, deployCfg, deployCfg.ProjectConfig.App.Hooks.Deploy); err != nil {
 			return err
 		}
@@ -260,15 +261,21 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 		return err
 	}
 
+	log.Infof("Routing new traffic to new container successful")
+	log.Infof("Removing old containers")
+
 	if err := removeContainers(ctx, client, append(removalContainers, beforeCronjobs...)); err != nil {
 		return err
 	}
 
 	if len(deployCfg.ProjectConfig.App.Hooks.PostDeploy) > 0 {
+		log.Infof("Running post deploy hook")
 		if err := runHookInContainer(ctx, client, deployCfg, deployCfg.ProjectConfig.App.Hooks.PostDeploy); err != nil {
 			return err
 		}
 	}
+
+	log.Infof("Deployed successful, website is reachable at %s", deployCfg.ProjectConfig.Proxy.GetURL())
 
 	return nil
 }

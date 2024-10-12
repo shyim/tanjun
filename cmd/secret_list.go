@@ -1,7 +1,9 @@
 package cmd
 
 import (
-	"github.com/olekukonko/tablewriter"
+	"fmt"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
@@ -37,14 +39,16 @@ var secretListCmd = &cobra.Command{
 			return err
 		}
 
-		table := tablewriter.NewWriter(cmd.OutOrStdout())
-		table.SetHeader([]string{"Key", "Value"})
+		t := table.New().
+			Border(lipgloss.NormalBorder()).
+			BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
+			Headers("Key", "Value")
 
 		for key, value := range secrets {
-			table.Append([]string{key, value})
+			t.Row(key, value)
 		}
 
-		table.Render()
+		fmt.Println(t.Render())
 
 		return nil
 	},

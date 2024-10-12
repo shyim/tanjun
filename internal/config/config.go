@@ -17,26 +17,36 @@ type ProjectConfig struct {
 		Username string `yaml:"username,omitempty"`
 		Port     int    `yaml:"port,omitempty"`
 	} `yaml:"server" jsonschema:"required"`
-	Proxy struct {
-		Host        string `yaml:"host,omitempty" jsonschema:"required"`
-		AppPort     int    `yaml:"app_port,omitempty"`
-		HealthCheck struct {
-			Interval int    `yaml:"interval,omitempty"`
-			Timeout  int    `yaml:"timeout,omitempty"`
-			Path     string `yaml:"path,omitempty"`
-		} `yaml:"healthcheck,omitempty"`
-		ResponseTimeout int  `yaml:"response_timeout,omitempty"`
-		SSL             bool `yaml:"ssl,omitempty"`
-		Buffering       struct {
-			Requests        bool `yaml:"requests,omitempty"`
-			Responses       bool `yaml:"responses,omitempty"`
-			MaxRequestBody  int  `yaml:"max_request_body,omitempty"`
-			MaxResponseBody int  `yaml:"max_response_body,omitempty"`
-			Memory          int  `yaml:"memory,omitempty"`
-		}
-	} `yaml:"proxy"`
+	Proxy    ProjectProxy              `yaml:"proxy"`
 	App      ProjectApp                `yaml:"app,omitempty"`
 	Services map[string]ProjectService `yaml:"services,omitempty"`
+}
+
+type ProjectProxy struct {
+	Host        string `yaml:"host,omitempty" jsonschema:"required"`
+	AppPort     int    `yaml:"app_port,omitempty"`
+	HealthCheck struct {
+		Interval int    `yaml:"interval,omitempty"`
+		Timeout  int    `yaml:"timeout,omitempty"`
+		Path     string `yaml:"path,omitempty"`
+	} `yaml:"healthcheck,omitempty"`
+	ResponseTimeout int  `yaml:"response_timeout,omitempty"`
+	SSL             bool `yaml:"ssl,omitempty"`
+	Buffering       struct {
+		Requests        bool `yaml:"requests,omitempty"`
+		Responses       bool `yaml:"responses,omitempty"`
+		MaxRequestBody  int  `yaml:"max_request_body,omitempty"`
+		MaxResponseBody int  `yaml:"max_response_body,omitempty"`
+		Memory          int  `yaml:"memory,omitempty"`
+	}
+}
+
+func (p ProjectProxy) GetURL() string {
+	if p.SSL {
+		return "https://" + p.Host
+	}
+
+	return "http://" + p.Host
 }
 
 type ProjectWorker struct {
