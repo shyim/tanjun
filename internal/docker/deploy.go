@@ -162,23 +162,9 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 		}
 	}
 
-	if deployCfg.storage.Get(deployCfg.ContainerPrefix()+"_setup") == "" {
-		fmt.Println("Environment is new, running setup hook")
-
-		if len(deployCfg.ProjectConfig.App.Hooks.Setup) > 0 {
-			if err := runHookInContainer(ctx, client, deployCfg, deployCfg.ProjectConfig.App.Hooks.Setup); err != nil {
-				return err
-			}
-		}
-
-		deployCfg.storage.Set(deployCfg.ContainerPrefix()+"_setup", "true")
-	} else {
-		if len(deployCfg.ProjectConfig.App.Hooks.Changed) > 0 {
-			fmt.Printf("Environment %s is not new, running changed hook\n", deployCfg.Name)
-
-			if err := runHookInContainer(ctx, client, deployCfg, deployCfg.ProjectConfig.App.Hooks.Changed); err != nil {
-				return err
-			}
+	if len(deployCfg.ProjectConfig.App.Hooks.Deploy) > 0 {
+		if err := runHookInContainer(ctx, client, deployCfg, deployCfg.ProjectConfig.App.Hooks.Deploy); err != nil {
+			return err
 		}
 	}
 
@@ -196,43 +182,11 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 		return err
 	}
 
-	maxStartup := 60
+	containerInspect, err := client.ContainerInspect(ctx, resp.ID)
 
-	var containerInspect types.ContainerJSON
-
-	for {
-		containerInspect, err = client.ContainerInspect(ctx, resp.ID)
-
-		if err != nil {
-			return err
-		}
-
-		// container has no health check configured
-		if containerInspect.State.Running && containerInspect.State.Health == nil {
-			break
-		}
-
-		// container is running and healthy
-		if containerInspect.State.Running && containerInspect.State.Health != nil && containerInspect.State.Health.Status == types.Healthy {
-			break
-		}
-
-		maxStartup--
-
-		if maxStartup == 0 {
-			_ = client.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
-
-			if err := startContainers(ctx, client, append(beforeWorkers, beforeCronjobs...)); err != nil {
-				return err
-			}
-
-			return fmt.Errorf("container did not start in time, using old running containers")
-		}
-
-		time.Sleep(time.Second)
+	if err != nil {
+		return err
 	}
-
-	fmt.Println("New container is healthy, waiting 5 seconds before removing old containers")
 	time.Sleep(5 * time.Second)
 
 	if err := startWorkers(ctx, client, deployCfg); err != nil {
@@ -284,13 +238,38 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 		kamalCmd = append(kamalCmd, "--buffer-memory", fmt.Sprintf("%d", deployCfg.ProjectConfig.Proxy.Buffering.Memory))
 	}
 
+	removalContainers := append(beforeContainers, beforeWorkers...)
+
 	if err := configureKamalService(ctx, client, kamalCmd); err != nil {
+		// If we fail to configure kamal, we should stop the container and remove it
+		if restoreErr := client.ContainerKill(ctx, resp.ID, "SIGKILL"); restoreErr != nil {
+			return fmt.Errorf("kamal configure failed: %w and could not stop the new container: %s", err, restoreErr)
+		}
+
+		if restoreErr := client.ContainerRemove(ctx, resp.ID, container.RemoveOptions{}); restoreErr != nil {
+			return fmt.Errorf("kamal configure failed: %w and could not remove the new container: %s", err, restoreErr)
+		}
+
+		if len(removalContainers) > 0 {
+			if restoreErr := startContainers(ctx, client, removalContainers); restoreErr != nil {
+				return fmt.Errorf("kamal configure failed: %w and could not start the old workers / cronjobs: %s", err, restoreErr)
+			}
+		}
+
 		return err
 	}
 
-	removalContainers := append(beforeContainers, beforeWorkers...)
+	if err := removeContainers(ctx, client, append(removalContainers, beforeCronjobs...)); err != nil {
+		return err
+	}
 
-	return removeContainers(ctx, client, append(removalContainers, beforeCronjobs...))
+	if len(deployCfg.ProjectConfig.App.Hooks.PostDeploy) > 0 {
+		if err := runHookInContainer(ctx, client, deployCfg, deployCfg.ProjectConfig.App.Hooks.PostDeploy); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func createAppServerVolumes(ctx context.Context, client *client.Client, deployCfg DeployConfiguration) error {

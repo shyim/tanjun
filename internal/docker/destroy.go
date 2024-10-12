@@ -74,7 +74,6 @@ func DestroyProject(ctx context.Context, client *client.Client, name string) err
 	cfg := DeployConfiguration{Name: slug.Make(name)}
 
 	kv.Delete(cfg.ContainerPrefix() + "_secrets")
-	kv.Delete(cfg.ContainerPrefix() + "_setup")
 
 	if err := configureKamalService(ctx, client, []string{"kamal-proxy", "remove", cfg.Name}); err != nil {
 		if strings.Contains(err.Error(), "service not found") {

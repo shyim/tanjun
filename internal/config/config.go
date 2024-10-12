@@ -56,8 +56,8 @@ type ProjectApp struct {
 	Workers        map[string]ProjectWorker         `yaml:"workers,omitempty"`
 	Cronjobs       []ProjectCronjob                 `yaml:"cronjobs,omitempty"`
 	Hooks          struct {
-		Setup   string `yaml:"setup,omitempty"`
-		Changed string `yaml:"changed,omitempty"`
+		Deploy     string `yaml:"deploy,omitempty"`
+		PostDeploy string `yaml:"post_deploy,omitempty"`
 	} `yaml:"hooks,omitempty"`
 }
 

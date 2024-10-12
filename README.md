@@ -72,11 +72,11 @@ app:
       command: 'php bin/console scheduled-task:run --no-wait'
   # Hooks to run before the new container gets traffic
   hooks:
-    # Initial setup
-    setup: |
+    # Executed while deployment
+    deploy: |
       ./vendor/bin/shopware-deployment-helper run
-    # Executed after initial setup has been done once
-    changed: |
+    # Executed as last step, allowed to fail to run non-critical things
+    post_deploy: |
       ./vendor/bin/shopware-deployment-helper run
 
 services:
