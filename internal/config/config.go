@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/invopop/jsonschema"
 	"os"
 
 	"github.com/robfig/cron/v3"
@@ -52,13 +53,35 @@ type ProjectApp struct {
 	Dockerfile     string                           `yaml:"dockerfile"`
 	Environment    map[string]ProjectEnvironment    `yaml:"env,omitempty"`
 	InitialSecrets map[string]ProjectInitialSecrets `yaml:"initial_secrets,omitempty"`
-	Mounts         []ProjectMount                   `yaml:"mounts,omitempty"`
-	Workers        map[string]ProjectWorker         `yaml:"workers,omitempty"`
-	Cronjobs       []ProjectCronjob                 `yaml:"cronjobs,omitempty"`
-	Hooks          struct {
+	Secrets        struct {
+		FromEnv     ProjectFromEnv `yaml:"from_env,omitempty"`
+		FromEnvFile []string       `yaml:"from_env_file,omitempty"`
+	} `yaml:"secrets,omitempty"`
+	Mounts   []ProjectMount           `yaml:"mounts,omitempty"`
+	Workers  map[string]ProjectWorker `yaml:"workers,omitempty"`
+	Cronjobs []ProjectCronjob         `yaml:"cronjobs,omitempty"`
+	Hooks    struct {
 		Deploy     string `yaml:"deploy,omitempty"`
 		PostDeploy string `yaml:"post_deploy,omitempty"`
 	} `yaml:"hooks,omitempty"`
+}
+
+type ProjectFromEnv map[string]string
+
+func (e ProjectFromEnv) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		Type: "object",
+		AdditionalProperties: &jsonschema.Schema{
+			OneOf: []*jsonschema.Schema{
+				{
+					Type: "string",
+				},
+				{
+					Type: "null",
+				},
+			},
+		},
+	}
 }
 
 type ProjectInitialSecrets struct {

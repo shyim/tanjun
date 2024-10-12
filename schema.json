@@ -20,6 +20,21 @@
           },
           "type": "object"
         },
+        "secrets": {
+          "properties": {
+            "from_env": {
+              "$ref": "#/$defs/ProjectFromEnv"
+            },
+            "from_env_file": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object"
+        },
         "mounts": {
           "items": {
             "$ref": "#/$defs/ProjectMount"
@@ -40,10 +55,10 @@
         },
         "hooks": {
           "properties": {
-            "setup": {
+            "deploy": {
               "type": "string"
             },
-            "changed": {
+            "post_deploy": {
               "type": "string"
             }
           },
@@ -191,6 +206,19 @@
         }
       },
       "additionalProperties": false,
+      "type": "object"
+    },
+    "ProjectFromEnv": {
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
       "type": "object"
     },
     "ProjectInitialSecrets": {
