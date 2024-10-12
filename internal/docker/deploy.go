@@ -92,8 +92,8 @@ func getAppContainerConfiguration(deployCfg DeployConfiguration) (*container.Con
 
 	networkCfg := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
-			"tanjun-public":       {},
-			deployCfg.NetworkName: {},
+			"tanjun-public": {},
+			deployCfg.Name:  {},
 		},
 	}
 
@@ -401,7 +401,7 @@ func addAppServerVolumes(deployCfg DeployConfiguration, hostCfg *container.HostC
 
 func createEnvironmentNetwork(ctx context.Context, c *client.Client, deployCfg DeployConfiguration) error {
 	options := network.ListOptions{Filters: filters.NewArgs()}
-	options.Filters.Add("name", deployCfg.NetworkName)
+	options.Filters.Add("name", deployCfg.Name)
 
 	networks, err := c.NetworkList(ctx, options)
 
@@ -413,7 +413,7 @@ func createEnvironmentNetwork(ctx context.Context, c *client.Client, deployCfg D
 		return nil
 	}
 
-	_, err = c.NetworkCreate(ctx, deployCfg.NetworkName, network.CreateOptions{
+	_, err = c.NetworkCreate(ctx, deployCfg.Name, network.CreateOptions{
 		Labels: map[string]string{
 			"tanjun":         "true",
 			"tanjun.project": deployCfg.Name,

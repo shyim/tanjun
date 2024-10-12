@@ -31,8 +31,8 @@ func runHookInContainer(ctx context.Context, client *client.Client, deployCfg De
 
 	networkCfg := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
-			"tanjun-public":       {},
-			deployCfg.NetworkName: {},
+			"tanjun-public": {},
+			deployCfg.Name:  {},
 		},
 	}
 

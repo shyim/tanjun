@@ -32,8 +32,6 @@ var deployCmd = &cobra.Command{
 			return err
 		}
 
-		//image := "ghcr.io/shyim/test:nice_napier0"
-
 		fmt.Println("Built image", image)
 
 		fmt.Println("Pulling the image on target server")
@@ -51,7 +49,6 @@ var deployCmd = &cobra.Command{
 		deployConfig := docker.DeployConfiguration{
 			Name:                 slug.Make(cfg.Name),
 			ImageName:            image,
-			NetworkName:          slug.Make(cfg.Name),
 			ProjectConfig:        cfg,
 			EnvironmentVariables: make(map[string]string),
 		}

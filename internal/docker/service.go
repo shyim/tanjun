@@ -142,7 +142,7 @@ func getDefaultServiceContainers(cfg DeployConfiguration, name string) (string, 
 
 	networkCfg := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
-			cfg.NetworkName: {
+			cfg.Name: {
 				Aliases: []string{name},
 			},
 		},
