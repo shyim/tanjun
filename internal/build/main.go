@@ -213,7 +213,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		},
 	}
 
-	imageName := fmt.Sprintf("%s:%s", config.Image, namesgenerator.GetRandomName(1))
+	version := namesgenerator.GetRandomName(1)
 
 	_, err = builder.Solve(ctx, def, buildkit.SolveOpt{
 		Session: []session.Attachable{authprovider.NewDockerAuthProvider(dockerConfig.LoadDefaultConfigFile(os.Stderr), nil)},
@@ -227,7 +227,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 			{
 				Type: buildkit.ExporterImage,
 				Attrs: map[string]string{
-					"name":                  imageName,
+					"name":                  fmt.Sprintf("%s:%s", config.Image, version),
 					"push":                  "true",
 					"containerimage.config": string(containerConfig),
 				},
@@ -239,5 +239,5 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		return "", err
 	}
 
-	return imageName, nil
+	return version, nil
 }

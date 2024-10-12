@@ -41,12 +41,7 @@ func removeContainers(ctx context.Context, client *client.Client, containers []t
 	for _, c := range containers {
 		c := c
 		err.Go(func() error {
-			timeout := 5
-			if err := client.ContainerStop(ctx, c.ID, container.StopOptions{Timeout: &timeout}); err != nil {
-				return err
-			}
-
-			return client.ContainerRemove(ctx, c.ID, container.RemoveOptions{})
+			return client.ContainerRemove(ctx, c.ID, container.RemoveOptions{Force: true})
 		})
 	}
 
@@ -59,7 +54,11 @@ func findPortMapping(cfg DeployConfiguration, container types.ContainerJSON) str
 	}
 
 	for p, _ := range container.NetworkSettings.Ports {
-		if p.Proto() == "tcp" && p.Port() != "9000" {
+		if p.Proto() == "udp" {
+			continue
+		}
+
+		if p.Port() != "9000" {
 			return p.Port()
 		}
 	}

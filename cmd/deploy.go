@@ -20,21 +20,23 @@ var deployCmd = &cobra.Command{
 			return err
 		}
 
-		currentDir, err := os.Getwd()
+		version, _ := cmd.Flags().GetString("version")
 
-		if err != nil {
-			return err
+		if version == "" {
+			currentDir, err := os.Getwd()
+
+			if err != nil {
+				return err
+			}
+
+			version, err = build.BuildImage(cmd.Context(), cfg, currentDir)
+
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Built version", version)
 		}
-
-		image, err := build.BuildImage(cmd.Context(), cfg, currentDir)
-
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("Built image", image)
-
-		fmt.Println("Pulling the image on target server")
 
 		client, err := docker.CreateClientFromConfig(cfg)
 
@@ -42,13 +44,15 @@ var deployCmd = &cobra.Command{
 			return err
 		}
 
-		if err := docker.PullImageIfNotThere(cmd.Context(), client, image); err != nil {
+		imageName := fmt.Sprintf("%s:%s", cfg.Image, version)
+
+		if err := docker.PullImageIfNotThere(cmd.Context(), client, imageName); err != nil {
 			return err
 		}
 
 		deployConfig := docker.DeployConfiguration{
 			Name:                 slug.Make(cfg.Name),
-			ImageName:            image,
+			ImageName:            imageName,
 			ProjectConfig:        cfg,
 			EnvironmentVariables: make(map[string]string),
 		}
@@ -63,4 +67,5 @@ var deployCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(deployCmd)
+	deployCmd.PersistentFlags().String("version", "", "Use this version to deploy, instead of building a new one. Useful for rollbacks")
 }
