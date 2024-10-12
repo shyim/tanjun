@@ -10,9 +10,10 @@ import (
 )
 
 type ProjectConfig struct {
-	Name   string `yaml:"name" jsonschema:"required"`
-	Image  string `yaml:"image" jsonschema:"required"`
-	Server struct {
+	Name         string `yaml:"name" jsonschema:"required"`
+	Image        string `yaml:"image" jsonschema:"required"`
+	KeepVersions int    `yaml:"keep_versions" jsonschema:"required"`
+	Server       struct {
 		Address  string `yaml:"address" jsonschema:"required"`
 		Username string `yaml:"username,omitempty"`
 		Port     int    `yaml:"port,omitempty"`
@@ -204,5 +205,9 @@ func (p *ProjectConfig) FillDefaults() {
 
 	if p.Proxy.ResponseTimeout == 0 {
 		p.Proxy.ResponseTimeout = 30
+	}
+
+	if p.KeepVersions == 0 {
+		p.KeepVersions = 5
 	}
 }

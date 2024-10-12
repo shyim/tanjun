@@ -26,7 +26,7 @@ var initCmd = &cobra.Command{
 		cfg.FillDefaults()
 
 		cfg.App.Dockerfile = ""
-		namePlaceHolder := namesgenerator.GetRandomName(1)
+		namePlaceHolder := namesgenerator.GetRandomName(0)
 
 		sshPort := "22"
 

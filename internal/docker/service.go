@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/charmbracelet/log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -76,6 +77,7 @@ func startServices(ctx context.Context, client *client.Client, deployCfg DeployC
 	}
 
 	var wg errgroup.Group
+	var configLock sync.Mutex
 
 	for serviceName, serviceConfig := range deployCfg.ProjectConfig.Services {
 		wg.Go(func(serviceName string, serviceConfig config.ProjectService) func() error {
@@ -89,9 +91,11 @@ func startServices(ctx context.Context, client *client.Client, deployCfg DeployC
 				if envs, err := svc.AttachEnvironmentVariables(serviceName, serviceConfig); err != nil {
 					return err
 				} else {
+					configLock.Lock()
 					for key, value := range envs {
 						deployCfg.EnvironmentVariables[key] = value
 					}
+					configLock.Unlock()
 				}
 
 				var containerId string

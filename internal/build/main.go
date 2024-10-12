@@ -214,7 +214,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		},
 	}
 
-	version := namesgenerator.GetRandomName(1)
+	version := namesgenerator.GetRandomName(0)
 
 	_, err = builder.Solve(ctx, def, buildkit.SolveOpt{
 		Session: []session.Attachable{authprovider.NewDockerAuthProvider(dockerConfig.LoadDefaultConfigFile(os.Stderr), nil)},

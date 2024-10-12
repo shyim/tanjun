@@ -40,34 +40,34 @@ func (c DeployConfiguration) GetEnvironmentVariables() []string {
 	return env
 }
 
-func getEnvironmentContainers(ctx context.Context, client *client.Client, deployCfg DeployConfiguration) ([]types.Container, error) {
+func getEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]types.Container, error) {
 	options := container.ListOptions{
 		Filters: filters.NewArgs(),
 	}
 
-	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", deployCfg.Name))
+	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", projectName))
 	options.Filters.Add("label", "tanjun.app=true")
 
 	return client.ContainerList(ctx, options)
 }
 
-func getWorkerEnvironmentContainers(ctx context.Context, client *client.Client, deployCfg DeployConfiguration) ([]types.Container, error) {
+func getWorkerEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]types.Container, error) {
 	options := container.ListOptions{
 		Filters: filters.NewArgs(),
 	}
 
-	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", deployCfg.Name))
+	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", projectName))
 	options.Filters.Add("label", "tanjun.worker")
 
 	return client.ContainerList(ctx, options)
 }
 
-func getCronjobEnvironmentContainers(ctx context.Context, client *client.Client, deployCfg DeployConfiguration) ([]types.Container, error) {
+func getCronjobEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]types.Container, error) {
 	options := container.ListOptions{
 		Filters: filters.NewArgs(),
 	}
 
-	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", deployCfg.Name))
+	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", projectName))
 	options.Filters.Add("label", "tanjun.cronjob")
 
 	return client.ContainerList(ctx, options)
@@ -121,7 +121,7 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 		return err
 	}
 
-	beforeContainers, err := getEnvironmentContainers(ctx, client, deployCfg)
+	beforeContainers, err := getEnvironmentContainers(ctx, client, deployCfg.Name)
 
 	if err != nil {
 		return err
@@ -135,7 +135,7 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 		return err
 	}
 
-	beforeWorkers, err := getWorkerEnvironmentContainers(ctx, client, deployCfg)
+	beforeWorkers, err := getWorkerEnvironmentContainers(ctx, client, deployCfg.Name)
 
 	if err != nil {
 		return err
@@ -149,7 +149,7 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 		}
 	}
 
-	beforeCronjobs, err := getCronjobEnvironmentContainers(ctx, client, deployCfg)
+	beforeCronjobs, err := getCronjobEnvironmentContainers(ctx, client, deployCfg.Name)
 
 	if err != nil {
 		return err
@@ -277,7 +277,11 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 
 	log.Infof("Deployed successful, website is reachable at %s", deployCfg.ProjectConfig.Proxy.GetURL())
 
-	return nil
+	if len(beforeContainers) > 0 {
+		log.Infof("You can rollback to the previous version with tanjun deploy --rollback")
+	}
+
+	return VersionDrain(ctx, client, deployCfg.ProjectConfig.Image, deployCfg.ProjectConfig.KeepVersions)
 }
 
 func createAppServerVolumes(ctx context.Context, client *client.Client, deployCfg DeployConfiguration) error {
