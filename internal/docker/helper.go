@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/docker/api/types/container"
@@ -41,7 +41,7 @@ func PullImageIfNotThere(ctx context.Context, client *client.Client, imageName s
 	}
 
 	if !imageExists {
-		fmt.Printf("Pulling image: %s\n", imageName)
+		log.Infof("Pulling image: %s\n", imageName)
 
 		opts := image.PullOptions{}
 

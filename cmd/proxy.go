@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
@@ -46,7 +47,7 @@ var forwardCmd = &cobra.Command{
 
 		cleanUp := func() {
 			if err := client.ContainerKill(cmd.Context(), proxy.ProxyContainerId, "SIGKILL"); err != nil {
-				fmt.Printf("Failed to kill proxy container: %s", err)
+				log.Printf("Failed to kill proxy container: %s", err)
 			}
 		}
 
@@ -85,13 +86,13 @@ var forwardCmd = &cobra.Command{
 
 		port := localServer.Addr().(*net.TCPAddr).Port
 
-		fmt.Printf("Forwarded to local port: %d\n", port)
+		log.Printf("Forwarded to local port: %d\n", port)
 
 		for {
 			client, err := localServer.Accept()
 
 			if err != nil {
-				fmt.Printf("Error accepting connection: %s\n", err)
+				log.Printf("Error accepting connection: %s\n", err)
 				continue
 			}
 
@@ -101,7 +102,7 @@ var forwardCmd = &cobra.Command{
 				forwardService, err := tls.Dial("tcp", fmt.Sprintf("%s:%s", cfg.Server.Address, proxy.ListenPort), tlsConfig)
 
 				if err != nil {
-					fmt.Printf("Error connecting to forward service: %s\n", err)
+					log.Printf("Error connecting to forward service: %s\n", err)
 					return
 				}
 
@@ -111,7 +112,7 @@ var forwardCmd = &cobra.Command{
 					_, err = io.Copy(forwardService, client)
 
 					if err != nil {
-						fmt.Printf("Error copying data to forward service: %s\n", err)
+						log.Printf("Error copying data to forward service: %s\n", err)
 					}
 				}()
 

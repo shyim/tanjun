@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"math/rand/v2"
 	"time"
 
@@ -141,7 +142,7 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 	}
 
 	if len(beforeWorkers) > 0 {
-		fmt.Println("Stopping old worker containers")
+		log.Info("Stopping old worker containers")
 
 		if err := stopContainers(ctx, client, beforeWorkers); err != nil {
 			return err
@@ -155,7 +156,7 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 	}
 
 	if len(beforeCronjobs) > 0 {
-		fmt.Println("Stopping old cronjob containers")
+		log.Info("Stopping old cronjob containers")
 
 		if err := stopContainers(ctx, client, beforeCronjobs); err != nil {
 			return err
@@ -197,7 +198,7 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 		return err
 	}
 
-	fmt.Println("Starting to route new traffic to new container")
+	log.Infof("Starting to route new traffic to new container")
 
 	proxyHost := containerInspect.NetworkSettings.Networks["tanjun-public"].IPAddress
 	proxyPort := findPortMapping(deployCfg, containerInspect)
@@ -284,8 +285,8 @@ func createAppServerVolumes(ctx context.Context, client *client.Client, deployCf
 	userId, err := determineUidOfAppContainer(ctx, client, deployCfg.ImageName)
 
 	if err != nil {
-		fmt.Printf("Error determining UID of app container: %s\n", err)
-		fmt.Printf("Using know 1000:1000 as fallback when creating volumes\n")
+		log.Warnf("Error determining UID of app container: %s\n", err)
+		log.Warnf("Using know 1000:1000 as fallback when creating volumes\n")
 	}
 
 	options := volume.ListOptions{Filters: filters.NewArgs()}

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
@@ -42,7 +42,7 @@ var secretDelCmd = &cobra.Command{
 			if _, ok := secrets[arg]; ok {
 				delete(secrets, arg)
 			} else {
-				fmt.Printf("Secret %s not found. Skipping..\n", arg)
+				log.Warnf("Secret %s not found. Skipping..\n", arg)
 			}
 		}
 
@@ -50,7 +50,7 @@ var secretDelCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Secrets set. You need to redeploy the project for the changes to take effect")
+		log.Print("Secrets set. You need to redeploy the project for the changes to take effect\n")
 
 		return nil
 	},

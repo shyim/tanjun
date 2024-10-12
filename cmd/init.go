@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/gosimple/slug"
 	"github.com/manifoldco/promptui"
 	"github.com/shyim/tanjun/internal/config"
@@ -77,7 +78,7 @@ var initCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Created a .tanjun.yml. Run next tanjun setup to setup the server")
+		log.Print("Created a .tanjun.yml. Run next tanjun setup to setup the server\n")
 
 		return nil
 	},

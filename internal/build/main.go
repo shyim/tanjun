@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/patternmatcher/ignorefile"
 	"github.com/shyim/tanjun/internal/buildpack"
@@ -79,15 +80,15 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 
 	defer func() {
 		if err := dockerClient.ContainerKill(ctx, c.ID, "SIGKILL"); err != nil {
-			fmt.Println(err)
+			log.Warnf("Failed to kill container %s: %s", c.ID, err)
 		}
 
 		if err := dockerClient.ContainerRemove(ctx, c.ID, container.RemoveOptions{}); err != nil {
-			fmt.Println(err)
+			log.Warnf("Failed to remove container %s: %s", c.ID, err)
 		}
 
 		if err := dockerClient.Close(); err != nil {
-			fmt.Println(err)
+			log.Warnf("Failed to close docker client: %s", err)
 		}
 	}()
 
@@ -178,7 +179,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		_, err := display.UpdateFrom(ctx, ch)
 
 		if err != nil {
-			fmt.Println(err)
+			log.Warnf("Failed to update display: %s", err)
 		}
 
 		// wait until end of ch

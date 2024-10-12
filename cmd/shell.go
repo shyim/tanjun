@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/shyim/tanjun/internal/config"
@@ -89,7 +90,7 @@ var shellCmd = &cobra.Command{
 
 		defer func() {
 			if err := resp.CloseWrite(); err != nil {
-				fmt.Println("Error closing write:", err)
+				log.Warnf("error closing write: %w", err)
 			}
 
 			if err := resp.Conn.Close(); err != nil {

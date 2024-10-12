@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
@@ -27,7 +27,7 @@ var setupCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Server setup complete")
+		log.Print("Server setup complete\n")
 
 		return nil
 	},

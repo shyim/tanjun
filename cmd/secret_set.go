@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
@@ -52,7 +53,7 @@ var secretSetCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Secrets set. You need to redeploy the project for the changes to take effect")
+		log.Print("Secrets set. You need to redeploy the project for the changes to take effect\n")
 
 		return nil
 	},

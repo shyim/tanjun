@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
@@ -29,8 +29,8 @@ var destroyCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Project %s destroyed\n", cfg.Name)
-		fmt.Println("The docker image is still available, you need to delete it manually")
+		log.Printf("Project %s destroyed\n", cfg.Name)
+		log.Print("The docker image is still available, you need to delete it manually\n")
 
 		return nil
 	},

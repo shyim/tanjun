@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"strings"
 	"time"
 
@@ -172,7 +173,7 @@ func startService(ctx context.Context, client *client.Client, name, containerNam
 		return err
 	}
 
-	fmt.Printf("Started service: %s, waiting to be healty\n", name)
+	log.Infof("Started service: %s, waiting to be healty\n", name)
 	timeOut := 300
 
 	for {
@@ -194,7 +195,7 @@ func startService(ctx context.Context, client *client.Client, name, containerNam
 		}
 	}
 
-	fmt.Printf("Service %s is healthy\n", name)
+	log.Infof("Service %s is healthy\n", name)
 
 	return nil
 }

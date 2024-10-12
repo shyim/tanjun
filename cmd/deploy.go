@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/gosimple/slug"
 	"github.com/shyim/tanjun/internal/build"
 	"github.com/shyim/tanjun/internal/config"
@@ -35,7 +36,7 @@ var deployCmd = &cobra.Command{
 				return err
 			}
 
-			fmt.Println("Built version", version)
+			log.Infof("Built version %s", version)
 		}
 
 		client, err := docker.CreateClientFromConfig(cfg)
