@@ -77,80 +77,14 @@
         "image": {
           "type": "string"
         },
+        "keep_versions": {
+          "type": "integer"
+        },
         "server": {
-          "properties": {
-            "address": {
-              "type": "string"
-            },
-            "username": {
-              "type": "string"
-            },
-            "port": {
-              "type": "integer"
-            }
-          },
-          "additionalProperties": false,
-          "type": "object",
-          "required": [
-            "address"
-          ]
+          "$ref": "#/$defs/ProjectServer"
         },
         "proxy": {
-          "properties": {
-            "host": {
-              "type": "string"
-            },
-            "app_port": {
-              "type": "integer"
-            },
-            "healthcheck": {
-              "properties": {
-                "interval": {
-                  "type": "integer"
-                },
-                "timeout": {
-                  "type": "integer"
-                },
-                "path": {
-                  "type": "string"
-                }
-              },
-              "additionalProperties": false,
-              "type": "object"
-            },
-            "response_timeout": {
-              "type": "integer"
-            },
-            "ssl": {
-              "type": "boolean"
-            },
-            "Buffering": {
-              "properties": {
-                "requests": {
-                  "type": "boolean"
-                },
-                "responses": {
-                  "type": "boolean"
-                },
-                "max_request_body": {
-                  "type": "integer"
-                },
-                "max_response_body": {
-                  "type": "integer"
-                },
-                "memory": {
-                  "type": "integer"
-                }
-              },
-              "additionalProperties": false,
-              "type": "object"
-            }
-          },
-          "additionalProperties": false,
-          "type": "object",
-          "required": [
-            "host"
-          ]
+          "$ref": "#/$defs/ProjectProxy"
         },
         "app": {
           "$ref": "#/$defs/ProjectApp"
@@ -167,6 +101,7 @@
       "required": [
         "name",
         "image",
+        "keep_versions",
         "server"
       ]
     },
@@ -247,6 +182,81 @@
       "required": [
         "name",
         "path"
+      ]
+    },
+    "ProjectProxy": {
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "app_port": {
+          "type": "integer"
+        },
+        "healthcheck": {
+          "properties": {
+            "interval": {
+              "type": "integer"
+            },
+            "timeout": {
+              "type": "integer"
+            },
+            "path": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "response_timeout": {
+          "type": "integer"
+        },
+        "ssl": {
+          "type": "boolean"
+        },
+        "Buffering": {
+          "properties": {
+            "requests": {
+              "type": "boolean"
+            },
+            "responses": {
+              "type": "boolean"
+            },
+            "max_request_body": {
+              "type": "integer"
+            },
+            "max_response_body": {
+              "type": "integer"
+            },
+            "memory": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "host"
+      ]
+    },
+    "ProjectServer": {
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "address"
       ]
     },
     "ProjectService": {

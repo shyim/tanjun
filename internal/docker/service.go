@@ -177,7 +177,7 @@ func startService(ctx context.Context, client *client.Client, name, containerNam
 		return err
 	}
 
-	log.Infof("Started service: %s, waiting to be healty\n", name)
+	log.Infof("Started service: %s, waiting to be healthy", name)
 	timeOut := 300
 
 	for {
@@ -199,7 +199,7 @@ func startService(ctx context.Context, client *client.Client, name, containerNam
 		}
 	}
 
-	log.Infof("Service %s is healthy\n", name)
+	log.Infof("Service %s is healthy", name)
 
 	return nil
 }

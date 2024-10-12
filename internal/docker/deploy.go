@@ -89,7 +89,11 @@ func getAppContainerConfiguration(deployCfg DeployConfiguration) (*container.Con
 		Env: deployCfg.GetEnvironmentVariables(),
 	}
 
-	hostCfg := &container.HostConfig{}
+	hostCfg := &container.HostConfig{
+		RestartPolicy: container.RestartPolicy{
+			Name: container.RestartPolicyUnlessStopped,
+		},
+	}
 
 	networkCfg := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{

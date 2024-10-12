@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
+	"github.com/shyim/tanjun/internal/server"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +16,12 @@ var setupCmd = &cobra.Command{
 
 		if err != nil {
 			return err
+		}
+
+		if cfg.Server.Address != "127.0.0.1" {
+			if err := server.Setup(cmd.Context(), cfg.Server); err != nil {
+				return err
+			}
 		}
 
 		client, err := docker.CreateClientFromConfig(cfg)

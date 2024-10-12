@@ -74,6 +74,9 @@ func createKeyValueContainer(ctx context.Context, c *client.Client) error {
 
 	hostCfg := &container.HostConfig{
 		Mounts: []mount.Mount{{Type: "volume", Source: tanjunKVVolumeName, Target: "/data"}},
+		RestartPolicy: container.RestartPolicy{
+			Name: container.RestartPolicyUnlessStopped,
+		},
 	}
 
 	created, err := c.ContainerCreate(ctx, cfg, hostCfg, nil, nil, tanjunKVContainerName)
@@ -129,6 +132,9 @@ func createKamalContainer(ctx context.Context, c *client.Client) error {
 	hostCfg := &container.HostConfig{
 		Mounts:       []mount.Mount{{Type: "volume", Source: kamalVolumeName, Target: "/home/kamal-proxy/.config/kamal-proxy/"}},
 		PortBindings: ports,
+		RestartPolicy: container.RestartPolicy{
+			Name: container.RestartPolicyUnlessStopped,
+		},
 	}
 
 	networkCfg := &network.NetworkingConfig{

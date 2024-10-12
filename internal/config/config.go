@@ -10,17 +10,19 @@ import (
 )
 
 type ProjectConfig struct {
-	Name         string `yaml:"name" jsonschema:"required"`
-	Image        string `yaml:"image" jsonschema:"required"`
-	KeepVersions int    `yaml:"keep_versions" jsonschema:"required"`
-	Server       struct {
-		Address  string `yaml:"address" jsonschema:"required"`
-		Username string `yaml:"username,omitempty"`
-		Port     int    `yaml:"port,omitempty"`
-	} `yaml:"server" jsonschema:"required"`
-	Proxy    ProjectProxy              `yaml:"proxy"`
-	App      ProjectApp                `yaml:"app,omitempty"`
-	Services map[string]ProjectService `yaml:"services,omitempty"`
+	Name         string                    `yaml:"name" jsonschema:"required"`
+	Image        string                    `yaml:"image" jsonschema:"required"`
+	KeepVersions int                       `yaml:"keep_versions" jsonschema:"required"`
+	Server       ProjectServer             `yaml:"server" jsonschema:"required"`
+	Proxy        ProjectProxy              `yaml:"proxy"`
+	App          ProjectApp                `yaml:"app,omitempty"`
+	Services     map[string]ProjectService `yaml:"services,omitempty"`
+}
+
+type ProjectServer struct {
+	Address  string `yaml:"address" jsonschema:"required"`
+	Username string `yaml:"username,omitempty"`
+	Port     int    `yaml:"port,omitempty"`
 }
 
 type ProjectProxy struct {
