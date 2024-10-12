@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 type dockerMessage struct {
@@ -46,6 +47,10 @@ func logDockerResponse(response io.ReadCloser) error {
 
 		if msg.ErrorDetail.Message != "" {
 			return fmt.Errorf("docker error: %s", msg.ErrorDetail.Message)
+		}
+
+		if strings.HasPrefix(msg.Status, "Pulling from") || strings.HasPrefix(msg.Status, "Digest:") || strings.HasPrefix(msg.Status, "Status:") {
+			continue
 		}
 
 		if msg.Status != "" {

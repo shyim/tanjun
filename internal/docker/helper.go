@@ -41,7 +41,7 @@ func PullImageIfNotThere(ctx context.Context, client *client.Client, imageName s
 	}
 
 	if !imageExists {
-		log.Infof("Pulling image: %s\n", imageName)
+		log.Infof("Pulling image: %s", imageName)
 
 		opts := image.PullOptions{}
 
