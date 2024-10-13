@@ -3,12 +3,13 @@ package docker
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/shyim/tanjun/internal/config"
-	"slices"
-	"strings"
 )
 
 type ValkeyService struct {
@@ -23,7 +24,7 @@ func (v ValkeyService) Deploy(ctx context.Context, client *client.Client, servic
 		Test: []string{"CMD", "valkey-cli", "ping"},
 	}
 
-	containerCfg.Image = "valkey/valkey:7.2"
+	containerCfg.Image = "valkey/" + serviceConfig.Type
 
 	containerCfg.Cmd = []string{"valkey-server"}
 
@@ -57,8 +58,8 @@ func (v ValkeyService) AttachEnvironmentVariables(serviceName string, serviceCon
 }
 
 func (v ValkeyService) Validate(serviceName string, serviceConfig config.ProjectService) error {
-	if serviceConfig.Type != "valkey:7.2" {
-		return fmt.Errorf("service %s: invalid service type %s, must be valkey:7.2", serviceName, serviceConfig.Type)
+	if serviceConfig.Type != "valkey:7.2" && serviceConfig.Type != "valkey:8.0" {
+		return fmt.Errorf("service %s: invalid service type %s, must be valkey:7.2 or valkey:8.0", serviceName, serviceConfig.Type)
 	}
 
 	return nil

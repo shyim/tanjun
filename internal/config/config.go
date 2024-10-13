@@ -122,7 +122,7 @@ type ProjectMount struct {
 }
 
 type ProjectService struct {
-	Type     string            `yaml:"type" jsonschema:"enum=mysql:8.0,enum=mysql:8.4,enum=valkey:7.2"`
+	Type     string            `yaml:"type" jsonschema:"enum=mysql:8.0,enum=mysql:8.4,enum=valkey:7.2,enum=valkey:8.0"`
 	Settings map[string]string `yaml:"settings"`
 }
 
