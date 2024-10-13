@@ -2,21 +2,31 @@ package config
 
 import (
 	"fmt"
-	"github.com/invopop/jsonschema"
 	"os"
+
+	"github.com/invopop/jsonschema"
 
 	"github.com/robfig/cron/v3"
 	"gopkg.in/yaml.v3"
 )
 
 type ProjectConfig struct {
-	Name         string                    `yaml:"name" jsonschema:"required"`
-	Image        string                    `yaml:"image" jsonschema:"required"`
-	KeepVersions int                       `yaml:"keep_versions" jsonschema:"required"`
-	Server       ProjectServer             `yaml:"server" jsonschema:"required"`
-	Proxy        ProjectProxy              `yaml:"proxy"`
-	App          ProjectApp                `yaml:"app,omitempty"`
-	Services     map[string]ProjectService `yaml:"services,omitempty"`
+	Name         string `yaml:"name" jsonschema:"required"`
+	Image        string `yaml:"image" jsonschema:"required"`
+	KeepVersions int    `yaml:"keep_versions"`
+	Build        struct {
+		Labels               map[string]string `yaml:"labels,omitempty"`
+		BuildArgs            map[string]string `yaml:"args,omitempty"`
+		PassThroughSSHSocket bool              `yaml:"passthroughs_ssh_socket,omitempty"`
+		Secrets              struct {
+			FromEnv    ProjectFromEnv `yaml:"from_env,omitempty"`
+			FromStored ProjectFromEnv `yaml:"from_stored,omitempty"`
+		} `yaml:"secrets,omitempty"`
+	} `yaml:"build,omitempty"`
+	Server   ProjectServer             `yaml:"server" jsonschema:"required"`
+	Proxy    ProjectProxy              `yaml:"proxy"`
+	App      ProjectApp                `yaml:"app,omitempty"`
+	Services map[string]ProjectService `yaml:"services,omitempty"`
 }
 
 type ProjectServer struct {
@@ -41,7 +51,7 @@ type ProjectProxy struct {
 		MaxRequestBody  int  `yaml:"max_request_body,omitempty"`
 		MaxResponseBody int  `yaml:"max_response_body,omitempty"`
 		Memory          int  `yaml:"memory,omitempty"`
-	}
+	} `yaml:"buffering,omitempty"`
 }
 
 func (p ProjectProxy) GetURL() string {

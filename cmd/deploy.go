@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"slices"
+
 	"github.com/charmbracelet/log"
 	"github.com/gosimple/slug"
 	"github.com/shyim/tanjun/internal/build"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
-	"os"
-	"slices"
 )
 
 var deployCmd = &cobra.Command{
