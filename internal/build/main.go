@@ -1,36 +1,23 @@
 package build
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/charmbracelet/log"
-	"github.com/moby/buildkit/client/llb"
-	"github.com/moby/patternmatcher/ignorefile"
-	"github.com/shyim/tanjun/internal/buildpack"
-	"os"
-	"path"
-	"slices"
-	"strings"
-	"time"
-
-	dockerConfig "github.com/docker/cli/cli/config"
-	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/namesgenerator"
 	buildkit "github.com/moby/buildkit/client"
-	"github.com/moby/buildkit/client/llb/imagemetaresolver"
-	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
-	"github.com/moby/buildkit/session"
-	"github.com/moby/buildkit/session/auth/authprovider"
-	"github.com/moby/buildkit/solver/pb"
-	"github.com/moby/buildkit/util/progress/progressui"
-	imageSpecsV1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
-	"github.com/tonistiigi/fsutil"
+	"os"
+	"os/signal"
 )
+
+type contextConfig string
+type contextRootPath string
+type contextDockerClient string
+
+const contextConfigField contextConfig = "projectConfig"
+const contextRootPathField contextRootPath = "rootPath"
+const contextDockerClientField contextDockerClient = "dockerClient"
 
 func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) (string, error) {
 	var dockerClient *client.Client
@@ -52,113 +39,40 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		return "", err
 	}
 
-	var c container.CreateResponse
-
 	dockerClient, err = client.NewClientWithOpts(client.FromEnv)
 
 	if err != nil {
 		return "", err
 	}
 
-	if err := docker.PullImageIfNotThere(ctx, dockerClient, "moby/buildkit:v0.16.0"); err != nil {
-		return "", err
-	}
+	ctx = context.WithValue(ctx, contextConfigField, config)
+	ctx = context.WithValue(ctx, contextRootPathField, root)
+	ctx = context.WithValue(ctx, contextDockerClientField, dockerClient)
 
-	c, err = dockerClient.ContainerCreate(ctx, &container.Config{
-		Image: "moby/buildkit:v0.16.0",
-	}, &container.HostConfig{Privileged: true}, nil, nil, "")
-
+	containerId, err := startBuildkitd(ctx, dockerClient)
 	if err != nil {
 		return "", err
 	}
 
-	time.Sleep(2 * time.Second)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
 
-	if err := dockerClient.ContainerStart(ctx, c.ID, container.StartOptions{}); err != nil {
-		return "", err
-	}
-
-	defer func() {
-		if err := dockerClient.ContainerKill(ctx, c.ID, "SIGKILL"); err != nil {
-			log.Warnf("Failed to kill container %s: %s", c.ID, err)
-		}
-
-		if err := dockerClient.ContainerRemove(ctx, c.ID, container.RemoveOptions{}); err != nil {
-			log.Warnf("Failed to remove container %s: %s", c.ID, err)
-		}
-
-		if err := dockerClient.Close(); err != nil {
-			log.Warnf("Failed to close docker client: %s", err)
-		}
+	go func() {
+		<-c
+		stopBuildkitd(dockerClient, ctx, containerId)
+		os.Exit(1)
 	}()
 
-	var dockerFile []byte
+	defer stopBuildkitd(dockerClient, ctx, containerId)
 
-	if _, err := os.Stat(path.Join(root, config.App.Dockerfile)); os.IsNotExist(err) {
-		build, err := buildpack.GenerateImageFile(root)
-
-		if err != nil {
-			return "", err
-		}
-
-		dockerFile = []byte(build.Dockerfile)
-		if err := os.WriteFile(path.Join(root, ".dockerignore"), []byte(strings.Join(build.Dockerignore, "\n")), 0644); err != nil {
-			return "", err
-		}
-	} else {
-		dockerFile, err = os.ReadFile(path.Join(root, config.App.Dockerfile))
-
-		if err != nil {
-			return "", err
-		}
-	}
-
-	var dockerIgnore []string
-
-	if _, err := os.Stat(path.Join(root, ".dockerignore")); err == nil {
-		dockerIgnoreFile, err := os.ReadFile(path.Join(root, ".dockerignore"))
-
-		if err != nil {
-			return "", err
-		}
-
-		dockerIgnore, err = ignorefile.ReadAll(bytes.NewBuffer(dockerIgnoreFile))
-
-		if err != nil {
-			return "", err
-		}
-	}
-
-	if !slices.Contains(dockerIgnore, ".tanjun.yml") {
-		dockerIgnore = append(dockerIgnore, ".tanjun.yml")
-	}
-
-	caps := pb.Caps.CapSet(pb.Caps.All())
-
-	local := llb.Local("context", llb.ExcludePatterns(dockerIgnore))
-	state, img, _, _, err := dockerfile2llb.Dockerfile2LLB(ctx, dockerFile, dockerfile2llb.ConvertOpt{
-		MainContext:  &local,
-		MetaResolver: imagemetaresolver.Default(),
-		LLBCaps:      &caps,
-		TargetPlatform: &imageSpecsV1.Platform{
-			OS:           "linux",
-			Architecture: info.Architecture,
-		},
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	def, err := state.Marshal(ctx)
-
+	containerConfig, def, err := llbFromProject(ctx, info)
 	if err != nil {
 		return "", err
 	}
 
 	activeDockerClient = dockerClient
 
-	builder, err := buildkit.New(ctx, fmt.Sprintf("tanjun://%s", c.ID))
+	builder, err := buildkit.New(ctx, fmt.Sprintf("tanjun://%s", containerId))
 
 	if err != nil {
 		return "", err
@@ -166,75 +80,13 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 
 	defer builder.Close()
 
-	fsRoot, err := fsutil.NewFS(root)
+	version, solveOpt, err := getSolveConfiguration(ctx, containerConfig)
 
 	if err != nil {
 		return "", err
 	}
 
-	ch := make(chan *buildkit.SolveStatus, 1)
-	display, err := progressui.NewDisplay(os.Stdout, "auto")
-
-	go func() {
-		_, err := display.UpdateFrom(ctx, ch)
-
-		if err != nil {
-			log.Warnf("Failed to update display: %s", err)
-		}
-
-		// wait until end of ch
-		for range ch {
-		}
-	}()
-
-	if err != nil {
-		return "", err
-	}
-
-	containerConfig, err := json.Marshal(img)
-
-	if err != nil {
-		return "", err
-	}
-
-	cacheDir, err := os.UserCacheDir()
-
-	if err != nil {
-		return "", err
-	}
-
-	cacheExports := []buildkit.CacheOptionsEntry{
-		{
-			Type: "local",
-			Attrs: map[string]string{
-				"dest":         path.Join(cacheDir, "tanjun", "buildkit", "cache"),
-				"src":          path.Join(cacheDir, "tanjun", "buildkit", "cache"),
-				"ignore-error": "true",
-			},
-		},
-	}
-
-	version := namesgenerator.GetRandomName(0)
-
-	_, err = builder.Solve(ctx, def, buildkit.SolveOpt{
-		Session: []session.Attachable{authprovider.NewDockerAuthProvider(dockerConfig.LoadDefaultConfigFile(os.Stderr), nil)},
-		LocalMounts: map[string]fsutil.FS{
-			"context":    fsRoot,
-			"dockerfile": fsRoot,
-		},
-		CacheExports: cacheExports,
-		CacheImports: cacheExports,
-		Exports: []buildkit.ExportEntry{
-			{
-				Type: buildkit.ExporterImage,
-				Attrs: map[string]string{
-					"name":                  fmt.Sprintf("%s:%s", config.Image, version),
-					"push":                  "true",
-					"containerimage.config": string(containerConfig),
-				},
-			},
-		},
-	}, ch)
+	_, err = builder.Solve(ctx, def, *solveOpt, createSolveChan(ctx))
 
 	if err != nil {
 		return "", err

@@ -91,6 +91,8 @@ var deployCmd = &cobra.Command{
 
 				log.Infof("Built version %s", version)
 			}
+
+			return nil
 		}
 
 		imageName := fmt.Sprintf("%s:%s", cfg.Image, version)
