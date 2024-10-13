@@ -3,6 +3,7 @@ package build
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/docker/docker/api/types/system"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/client/llb/imagemetaresolver"
@@ -17,12 +18,7 @@ func llbFromProject(ctx context.Context, info system.Info) (string, *llb.Definit
 	root := ctx.Value(contextRootPathField).(string)
 	configFile := ctx.Value(contextConfigField).(*config.ProjectConfig)
 
-	dockerFile, err := getDockerFile(root, configFile)
-	if err != nil {
-		return "", nil, err
-	}
-
-	dockerIgnore, err := getDockerIgnores(root)
+	dockerFile, dockerIgnore, err := getDockerFile(root, configFile)
 	if err != nil {
 		return "", nil, err
 	}

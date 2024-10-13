@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"github.com/invopop/jsonschema"
 	"os"
+
+	"github.com/invopop/jsonschema"
 
 	"github.com/robfig/cron/v3"
 	"gopkg.in/yaml.v3"
@@ -12,13 +13,14 @@ import (
 type ProjectConfig struct {
 	Name         string `yaml:"name" jsonschema:"required"`
 	Image        string `yaml:"image" jsonschema:"required"`
-	KeepVersions int    `yaml:"keep_versions" jsonschema:"required"`
+	KeepVersions int    `yaml:"keep_versions"`
 	Build        struct {
 		Labels               map[string]string `yaml:"labels,omitempty"`
 		BuildArgs            map[string]string `yaml:"args,omitempty"`
 		PassThroughSSHSocket bool              `yaml:"passthroughs_ssh_socket,omitempty"`
 		Secrets              struct {
-			FromEnv ProjectFromEnv `yaml:"from_env,omitempty"`
+			FromEnv    ProjectFromEnv `yaml:"from_env,omitempty"`
+			FromStored ProjectFromEnv `yaml:"from_stored,omitempty"`
 		} `yaml:"secrets,omitempty"`
 	} `yaml:"build,omitempty"`
 	Server   ProjectServer             `yaml:"server" jsonschema:"required"`

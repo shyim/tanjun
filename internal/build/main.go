@@ -14,10 +14,12 @@ import (
 type contextConfig string
 type contextRootPath string
 type contextDockerClient string
+type contextRemoteClient string
 
 const contextConfigField contextConfig = "projectConfig"
 const contextRootPathField contextRootPath = "rootPath"
 const contextDockerClientField contextDockerClient = "dockerClient"
+const contextRemoteClientField contextRemoteClient = "remoteClient"
 
 func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) (string, error) {
 	var dockerClient *client.Client
@@ -35,9 +37,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		return "", err
 	}
 
-	if err := remoteClient.Close(); err != nil {
-		return "", err
-	}
+	defer remoteClient.Close()
 
 	dockerClient, err = client.NewClientWithOpts(client.FromEnv)
 
@@ -48,6 +48,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 	ctx = context.WithValue(ctx, contextConfigField, config)
 	ctx = context.WithValue(ctx, contextRootPathField, root)
 	ctx = context.WithValue(ctx, contextDockerClientField, dockerClient)
+	ctx = context.WithValue(ctx, contextRemoteClientField, remoteClient)
 
 	containerId, err := startBuildkitd(ctx, dockerClient)
 	if err != nil {

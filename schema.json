@@ -80,6 +80,39 @@
         "keep_versions": {
           "type": "integer"
         },
+        "build": {
+          "properties": {
+            "labels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "args": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "passthroughs_ssh_socket": {
+              "type": "boolean"
+            },
+            "secrets": {
+              "properties": {
+                "from_env": {
+                  "$ref": "#/$defs/ProjectFromEnv"
+                },
+                "from_stored": {
+                  "$ref": "#/$defs/ProjectFromEnv"
+                }
+              },
+              "additionalProperties": false,
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object"
+        },
         "server": {
           "$ref": "#/$defs/ProjectServer"
         },
@@ -101,7 +134,6 @@
       "required": [
         "name",
         "image",
-        "keep_versions",
         "server"
       ]
     },
@@ -213,7 +245,7 @@
         "ssl": {
           "type": "boolean"
         },
-        "Buffering": {
+        "buffering": {
           "properties": {
             "requests": {
               "type": "boolean"

@@ -3,8 +3,12 @@ package build
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
+
 	"github.com/charmbracelet/log"
 	dockerConfig "github.com/docker/cli/cli/config"
+	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/namesgenerator"
 	buildkit "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/session"
@@ -13,8 +17,6 @@ import (
 	"github.com/moby/buildkit/session/sshforward/sshprovider"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/tonistiigi/fsutil"
-	"os"
-	"path"
 )
 
 func getSolveConfiguration(ctx context.Context, containerConfig string) (string, *buildkit.SolveOpt, error) {
@@ -57,7 +59,10 @@ func getSolveConfiguration(ctx context.Context, containerConfig string) (string,
 		}
 	}
 
-	attachables = append(attachables, secretsprovider.NewSecretProvider(secretStore{config: configFile}))
+	attachables = append(attachables, secretsprovider.NewSecretProvider(secretStore{
+		config:       configFile,
+		remoteClient: ctx.Value(contextRemoteClientField).(*client.Client),
+	}))
 
 	solveOpt := buildkit.SolveOpt{
 		Session: attachables,
@@ -79,5 +84,5 @@ func getSolveConfiguration(ctx context.Context, containerConfig string) (string,
 		},
 	}
 
-	return "", &solveOpt, nil
+	return version, &solveOpt, nil
 }

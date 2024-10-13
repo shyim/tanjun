@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"slices"
+
 	"github.com/charmbracelet/log"
 	"github.com/gosimple/slug"
 	"github.com/shyim/tanjun/internal/build"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
-	"os"
-	"slices"
 )
 
 var deployCmd = &cobra.Command{
@@ -91,8 +92,6 @@ var deployCmd = &cobra.Command{
 
 				log.Infof("Built version %s", version)
 			}
-
-			return nil
 		}
 
 		imageName := fmt.Sprintf("%s:%s", cfg.Image, version)
