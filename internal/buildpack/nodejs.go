@@ -2,10 +2,12 @@ package buildpack
 
 import (
 	"fmt"
-	"github.com/shyim/go-version"
 	"log"
 	"os"
 	"path"
+	"strings"
+
+	"github.com/shyim/go-version"
 )
 
 type PackageJSON struct {
@@ -15,6 +17,9 @@ type PackageJSON struct {
 	Scripts         map[string]string `json:"scripts"`
 	Dependencies    map[string]string `json:"dependencies"`
 	DevDependencies map[string]string `json:"devDependencies"`
+	Tanjun          struct {
+		Runtime string `json:"runtime"`
+	} `json:"tanjun"`
 }
 
 func (j PackageJSON) HasDependencies() bool {
@@ -46,6 +51,18 @@ func detectNodeVersion(packageJson PackageJSON) string {
 	return "18"
 }
 
+func detectNodeRuntime(packageJson PackageJSON) string {
+	if packageJson.Tanjun.Runtime == "bun" {
+		return "bun"
+	}
+
+	if _, ok := packageJson.DevDependencies["@types/bun"]; ok {
+		return "bun"
+	}
+
+	return "node"
+}
+
 func generateByNodeJS(project string) (*GeneratedImageResult, error) {
 	var packageJSON PackageJSON
 
@@ -54,6 +71,7 @@ func generateByNodeJS(project string) (*GeneratedImageResult, error) {
 	}
 
 	nodeVersion := detectNodeVersion(packageJSON)
+	runtime := detectNodeRuntime(packageJSON)
 
 	result := &GeneratedImageResult{}
 
@@ -63,10 +81,15 @@ func generateByNodeJS(project string) (*GeneratedImageResult, error) {
 
 	result.AddLine("FROM ghcr.io/shyim/wolfi-php/base:latest as builder")
 	result.AddLine("ENV CI=true NODE_ENV=production NPM_CONFIG_PRODUCTION=false")
-	result.Add("RUN apk add --no-cache nodejs-%s npm", nodeVersion)
 
-	if packageManager == "bun" {
+	if runtime == "node" {
+		result.Add("RUN apk add --no-cache nodejs-%s npm", nodeVersion)
+	}
+
+	if packageManager == "bun" && runtime != "bun" {
 		result.Add(" bun-bin")
+	} else if runtime == "bun" {
+		result.AddLine("RUN apk add --no-cache bun-bin")
 	}
 
 	result.NewLine()
@@ -101,12 +124,18 @@ func generateByNodeJS(project string) (*GeneratedImageResult, error) {
 	result.AddLine("FROM ghcr.io/shyim/wolfi-php/base:latest")
 	result.AddLine("ENV NODE_ENV=production")
 	result.AddLine("WORKDIR /app")
-	result.AddLine("RUN apk add --no-cache nodejs-%s curl", nodeVersion)
+
+	if runtime == "node" {
+		result.AddLine("RUN apk add --no-cache nodejs-%s", nodeVersion)
+	} else {
+		result.AddLine("RUN apk add --no-cache bun-bin")
+	}
+
 	result.AddLine("COPY --from=builder /app .")
 
 	result.AddLine("EXPOSE 3000")
 
-	if err := nodeJSAddStartupCommand(project, result, packageJSON); err != nil {
+	if err := nodeJSAddStartupCommand(project, runtime, result, packageJSON); err != nil {
 		return nil, err
 	}
 
@@ -122,33 +151,45 @@ func detectNodePackageManager(project string) string {
 		return "pnpm"
 	}
 
-	if _, err := os.Stat(path.Join(project, "bun.lockdb")); err == nil {
+	if _, err := os.Stat(path.Join(project, "bun.lockb")); err == nil {
 		return "bun"
 	}
 
 	return "npm"
 }
 
-func nodeJSAddStartupCommand(project string, result *GeneratedImageResult, packageJSON PackageJSON) error {
+func nodeJSAddStartupCommand(project string, runtime string, result *GeneratedImageResult, packageJSON PackageJSON) error {
 	if _, ok := packageJSON.Scripts["start"]; ok {
-		result.AddLine("CMD npm start")
+		if runtime == "node" {
+			result.AddLine("CMD npm run start")
+		} else {
+			result.AddLine("CMD bun run --bun start")
+		}
 
 		return nil
 	}
+
+	possibleFiles := []string{"index.ts", "index.mts", "index.mjs", "index.js"}
 
 	if packageJSON.Main != "" {
-		result.AddLine("CMD node %s", packageJSON.Main)
-		return nil
+		// prepend the main file to the list of possible files
+		possibleFiles = append([]string{packageJSON.Main}, possibleFiles...)
 	}
 
-	if _, err := os.Stat(path.Join(project, "index.mjs")); err == nil {
-		result.AddLine("CMD node index.mjs")
-		return nil
-	}
+	for _, file := range possibleFiles {
+		if _, err := os.Stat(path.Join(project, file)); err == nil {
+			if runtime == "node" {
+				if strings.HasSuffix(file, ".ts") {
+					result.AddLine("CMD node --experimental-strip-types %s", file)
+				} else {
+					result.AddLine("CMD node %s", file)
+				}
+			} else {
+				result.AddLine("CMD bun %s", file)
+			}
 
-	if _, err := os.Stat(path.Join(project, "index.js")); err == nil {
-		result.AddLine("CMD node index.js")
-		return nil
+			return nil
+		}
 	}
 
 	return fmt.Errorf("could not detect how to start the application: provide a start script, a main file in package.json or an index.js file in the project root")
