@@ -11,7 +11,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	filters2 "github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/shyim/tanjun/internal/config"
@@ -31,6 +31,8 @@ func newService(serviceType string, serviceConfig config.ProjectService) (AppSer
 		svc = &MySQLService{}
 	} else if strings.HasPrefix(serviceType, "valkey:") {
 		svc = &ValkeyService{}
+	} else if strings.HasPrefix(serviceType, "rabbitmq:") {
+		svc = &RabbitmqService{}
 	} else {
 		return nil, fmt.Errorf("service type %s not supported", serviceType)
 	}
@@ -65,7 +67,7 @@ func startServices(ctx context.Context, client *client.Client, deployCfg DeployC
 	}
 
 	options := container.ListOptions{
-		Filters: filters2.NewArgs(),
+		Filters: filters.NewArgs(),
 	}
 
 	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", deployCfg.Name))
@@ -179,6 +181,10 @@ func startService(ctx context.Context, client *client.Client, name, containerNam
 		containerInspect, err := client.ContainerInspect(ctx, c.ID)
 		if err != nil {
 			return err
+		}
+
+		if containerInspect.State.Health == nil {
+			break
 		}
 
 		if containerInspect.State.Health != nil && containerInspect.State.Health.Status == types.Healthy {
