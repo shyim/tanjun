@@ -19,8 +19,11 @@ type ProjectConfig struct {
 		BuildArgs            map[string]string `yaml:"args,omitempty"`
 		PassThroughSSHSocket bool              `yaml:"passthroughs_ssh_socket,omitempty"`
 		Secrets              struct {
-			FromEnv    ProjectFromEnv `yaml:"from_env,omitempty"`
-			FromStored ProjectFromEnv `yaml:"from_stored,omitempty"`
+			FromEnv     ProjectFromEnv `yaml:"from_env,omitempty"`
+			FromStored  ProjectFromEnv `yaml:"from_stored,omitempty"`
+			OnePassword struct {
+				Secret []ProjectOnePassword `yaml:"items,omitempty"`
+			} `yaml:"onepassword,omitempty"`
 		} `yaml:"secrets,omitempty"`
 	} `yaml:"build,omitempty"`
 	Server   ProjectServer             `yaml:"server" jsonschema:"required"`
@@ -79,6 +82,9 @@ type ProjectApp struct {
 	Secrets        struct {
 		FromEnv     ProjectFromEnv `yaml:"from_env,omitempty"`
 		FromEnvFile []string       `yaml:"from_env_file,omitempty"`
+		OnePassword struct {
+			Secret []ProjectOnePassword `yaml:"items,omitempty"`
+		} `yaml:"onepassword,omitempty"`
 	} `yaml:"secrets,omitempty"`
 	Mounts   []ProjectMount           `yaml:"mounts,omitempty"`
 	Workers  map[string]ProjectWorker `yaml:"workers,omitempty"`
@@ -87,6 +93,13 @@ type ProjectApp struct {
 		Deploy     string `yaml:"deploy,omitempty"`
 		PostDeploy string `yaml:"post_deploy,omitempty"`
 	} `yaml:"hooks,omitempty"`
+}
+
+type ProjectOnePassword struct {
+	Name        string            `yaml:"name" jsonschema:"required"`
+	Vault       string            `yaml:"vault" jsonschema:"required"`
+	OmitFields  []string          `yaml:"omit_fields,omitempty"`
+	RemapFields map[string]string `yaml:"remap_fields,omitempty"`
 }
 
 type ProjectFromEnv map[string]string

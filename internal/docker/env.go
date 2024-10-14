@@ -1,29 +1,76 @@
 package docker
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"os"
 
 	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
+	"github.com/shyim/tanjun/internal/onepassword"
 
 	"github.com/expr-lang/expr"
 )
 
-func prepareEnvironmentVariables(cfg DeployConfiguration) error {
+func prepareEnvironmentVariables(ctx context.Context, cfg DeployConfiguration) error {
 	context := map[string]interface{}{
 		"randomString": randomString,
 		"config":       cfg.ProjectConfig,
 		"service":      cfg.serviceConfig,
 	}
 
-	secrets, err := ListProjectSecrets(cfg.storage, cfg.Name)
-
-	if err != nil {
+	if err := resolveEnvFromExpression(cfg, context); err != nil {
 		return err
 	}
 
+	for key, value := range cfg.ProjectConfig.App.Secrets.FromEnv {
+		if value == "" {
+			value = key
+		}
+
+		envValue := os.Getenv(value)
+
+		if envValue == "" {
+			log.Warnf("Environment variable %s is not set, skipping setting a value", value)
+
+			continue
+		}
+
+		cfg.environmentVariables[key] = envValue
+	}
+
+	if err := resolveEnvFromFile(cfg); err != nil {
+		return err
+	}
+
+	if err := resolveInitialSecrets(cfg, context); err != nil {
+		return err
+	}
+
+	if err := resolveOnePasswordSecrets(ctx, cfg); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func resolveOnePasswordSecrets(ctx context.Context, cfg DeployConfiguration) error {
+	for _, secret := range cfg.ProjectConfig.App.Secrets.OnePassword.Secret {
+		onePasswordSecrets, err := onepassword.ResolveSecrets(ctx, secret)
+
+		if err != nil {
+			return err
+		}
+
+		for key, value := range onePasswordSecrets {
+			cfg.environmentVariables[key] = value
+		}
+	}
+	return nil
+}
+
+func resolveEnvFromExpression(cfg DeployConfiguration, context map[string]interface{}) error {
 	for key, value := range cfg.ProjectConfig.App.Environment {
 		if value.Value != "" {
 			cfg.environmentVariables[key] = value.Value
@@ -43,23 +90,10 @@ func prepareEnvironmentVariables(cfg DeployConfiguration) error {
 
 		cfg.environmentVariables[key] = output.(string)
 	}
+	return nil
+}
 
-	for key, value := range cfg.ProjectConfig.App.Secrets.FromEnv {
-		if value == "" {
-			value = key
-		}
-
-		envValue := os.Getenv(value)
-
-		if envValue == "" {
-			log.Warnf("Environment variable %s is not set, skipping setting a value", value)
-
-			continue
-		}
-
-		cfg.environmentVariables[key] = envValue
-	}
-
+func resolveEnvFromFile(cfg DeployConfiguration) error {
 	for _, fileName := range cfg.ProjectConfig.App.Secrets.FromEnvFile {
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
 			log.Warnf("Environment file %s does not exist, skipping setting a value", fileName)
@@ -76,6 +110,16 @@ func prepareEnvironmentVariables(cfg DeployConfiguration) error {
 		for key, value := range envMap {
 			cfg.environmentVariables[key] = value
 		}
+	}
+
+	return nil
+}
+
+func resolveInitialSecrets(cfg DeployConfiguration, context map[string]interface{}) error {
+	secrets, err := ListProjectSecrets(cfg.storage, cfg.Name)
+
+	if err != nil {
+		return err
 	}
 
 	changed := false

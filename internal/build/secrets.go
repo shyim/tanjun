@@ -3,17 +3,20 @@ package build
 import (
 	"context"
 	"fmt"
+	"os"
+	"sync"
+
 	"github.com/docker/docker/client"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
-	"os"
-	"sync"
+	"github.com/shyim/tanjun/internal/onepassword"
 )
 
 type secretStore struct {
-	config       *config.ProjectConfig
-	remoteClient *client.Client
-	secrets      map[string]string
+	config              *config.ProjectConfig
+	remoteClient        *client.Client
+	secrets             map[string]string
+	onePasswordResolved map[string]string
 }
 
 var secretLock = sync.Mutex{}
@@ -29,6 +32,25 @@ func (s secretStore) GetSecret(ctx context.Context, secret string) ([]byte, erro
 		}
 
 		return nil, fmt.Errorf("could not found value for secret %s: using environment value %s", secret, fieldName)
+	}
+
+	if s.onePasswordResolved == nil {
+		s.onePasswordResolved = make(map[string]string)
+		secretLock.Lock()
+
+		for _, secret := range s.config.Build.Secrets.OnePassword.Secret {
+			onePasswordSecrets, err := onepassword.ResolveSecrets(ctx, secret)
+
+			if err != nil {
+				return nil, err
+			}
+
+			for key, value := range onePasswordSecrets {
+				s.onePasswordResolved[key] = value
+			}
+		}
+
+		secretLock.Unlock()
 	}
 
 	if fieldName, ok := s.config.Build.Secrets.FromStored[secret]; ok {
@@ -63,6 +85,10 @@ func (s secretStore) GetSecret(ctx context.Context, secret string) ([]byte, erro
 		}
 
 		return nil, fmt.Errorf("could not found value for secret %s: using stored value %s", secret, fieldName)
+	}
+
+	if val, ok := s.onePasswordResolved[secret]; ok {
+		return []byte(val), nil
 	}
 
 	return nil, fmt.Errorf("could not found source for secret \"%s\". Did you maybe forgot to add the secret to your .tanjun.yml", secret)

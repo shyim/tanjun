@@ -30,6 +30,18 @@
                 "type": "string"
               },
               "type": "array"
+            },
+            "onepassword": {
+              "properties": {
+                "items": {
+                  "items": {
+                    "$ref": "#/$defs/ProjectOnePassword"
+                  },
+                  "type": "array"
+                }
+              },
+              "additionalProperties": false,
+              "type": "object"
             }
           },
           "additionalProperties": false,
@@ -104,6 +116,18 @@
                 },
                 "from_stored": {
                   "$ref": "#/$defs/ProjectFromEnv"
+                },
+                "onepassword": {
+                  "properties": {
+                    "items": {
+                      "items": {
+                        "$ref": "#/$defs/ProjectOnePassword"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "type": "object"
                 }
               },
               "additionalProperties": false,
@@ -214,6 +238,34 @@
       "required": [
         "name",
         "path"
+      ]
+    },
+    "ProjectOnePassword": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "vault": {
+          "type": "string"
+        },
+        "omit_fields": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "remap_fields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "vault"
       ]
     },
     "ProjectProxy": {

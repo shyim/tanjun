@@ -152,7 +152,7 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 		return err
 	}
 
-	if err := prepareEnvironmentVariables(deployCfg); err != nil {
+	if err := prepareEnvironmentVariables(ctx, deployCfg); err != nil {
 		return err
 	}
 
