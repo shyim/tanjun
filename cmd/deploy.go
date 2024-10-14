@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"github.com/charmbracelet/log"
-	"github.com/gosimple/slug"
 	"github.com/shyim/tanjun/internal/build"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
@@ -94,20 +93,7 @@ var deployCmd = &cobra.Command{
 			}
 		}
 
-		imageName := fmt.Sprintf("%s:%s", cfg.Image, version)
-
-		if err := docker.PullImageIfNotThere(cmd.Context(), client, imageName); err != nil {
-			return err
-		}
-
-		deployConfig := docker.DeployConfiguration{
-			Name:                 slug.Make(cfg.Name),
-			ImageName:            imageName,
-			ProjectConfig:        cfg,
-			EnvironmentVariables: make(map[string]string),
-		}
-
-		if err := docker.Deploy(cmd.Context(), client, deployConfig); err != nil {
+		if err := docker.Deploy(cmd.Context(), client, cfg, version); err != nil {
 			return err
 		}
 

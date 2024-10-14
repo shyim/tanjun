@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -49,12 +48,12 @@ func (v ValkeyService) Deploy(ctx context.Context, client *client.Client, servic
 	return startService(ctx, client, serviceName, containerName, containerCfg, hostCfg, networkConfig)
 }
 
-func (v ValkeyService) AttachEnvironmentVariables(serviceName string, serviceConfig config.ProjectService) (map[string]string, error) {
-	urlKey := fmt.Sprintf("%s_URL", strings.ToUpper(serviceName))
-
-	return map[string]string{
-		urlKey: fmt.Sprintf("redis://%s", serviceName),
-	}, nil
+func (v ValkeyService) AttachInfo(serviceName string, serviceConfig config.ProjectService) interface{} {
+	return map[string]interface{}{
+		"host": serviceName,
+		"port": "6379",
+		"url":  fmt.Sprintf("redis://%s:6379", serviceName),
+	}
 }
 
 func (v ValkeyService) Validate(serviceName string, serviceConfig config.ProjectService) error {

@@ -3,10 +3,11 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/charmbracelet/log"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -19,7 +20,7 @@ import (
 
 type AppService interface {
 	Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *types.ContainerJSON) error
-	AttachEnvironmentVariables(serviceName string, serviceConfig config.ProjectService) (map[string]string, error)
+	AttachInfo(serviceName string, serviceConfig config.ProjectService) interface{}
 	Validate(serviceName string, serviceConfig config.ProjectService) error
 }
 
@@ -88,15 +89,9 @@ func startServices(ctx context.Context, client *client.Client, deployCfg DeployC
 					return err
 				}
 
-				if envs, err := svc.AttachEnvironmentVariables(serviceName, serviceConfig); err != nil {
-					return err
-				} else {
-					configLock.Lock()
-					for key, value := range envs {
-						deployCfg.EnvironmentVariables[key] = value
-					}
-					configLock.Unlock()
-				}
+				configLock.Lock()
+				deployCfg.serviceConfig[serviceName] = svc.AttachInfo(serviceName, serviceConfig)
+				configLock.Unlock()
 
 				var containerId string
 

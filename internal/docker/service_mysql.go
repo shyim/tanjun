@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -78,12 +77,16 @@ func (m MySQLService) Deploy(ctx context.Context, client *client.Client, service
 	return startService(ctx, client, serviceName, containerName, containerCfg, hostCfg, networkConfig)
 }
 
-func (m MySQLService) AttachEnvironmentVariables(serviceName string, serviceCfg config.ProjectService) (map[string]string, error) {
-	urlKey := fmt.Sprintf("%s_URL", strings.ToUpper(serviceName))
-
-	return map[string]string{
-		urlKey: fmt.Sprintf("mysql://root@%s:3306/database", serviceName),
-	}, nil
+func (m MySQLService) AttachInfo(serviceName string, serviceCfg config.ProjectService) interface{} {
+	return map[string]interface{}{
+		"host":     serviceName,
+		"port":     "3306",
+		"username": "root",
+		"password": "",
+		"database": "database",
+		"url":      fmt.Sprintf("mysql://%s:3306", serviceName),
+		"go":       fmt.Sprintf("root:@tcp(%s:3306)/database", serviceName),
+	}
 }
 
 func (m MySQLService) Validate(serviceName string, serviceCfg config.ProjectService) error {

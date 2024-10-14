@@ -298,7 +298,8 @@
           "enum": [
             "mysql:8.0",
             "mysql:8.4",
-            "valkey:7.2"
+            "valkey:7.2",
+            "valkey:8.0"
           ]
         },
         "settings": {

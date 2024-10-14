@@ -2,10 +2,11 @@ package docker
 
 import (
 	"fmt"
-	"github.com/charmbracelet/log"
-	"github.com/joho/godotenv"
 	"math/rand"
 	"os"
+
+	"github.com/charmbracelet/log"
+	"github.com/joho/godotenv"
 
 	"github.com/expr-lang/expr"
 )
@@ -13,6 +14,8 @@ import (
 func prepareEnvironmentVariables(cfg DeployConfiguration) error {
 	context := map[string]interface{}{
 		"randomString": randomString,
+		"config":       cfg.ProjectConfig,
+		"service":      cfg.serviceConfig,
 	}
 
 	secrets, err := ListProjectSecrets(cfg.storage, cfg.Name)
@@ -23,7 +26,7 @@ func prepareEnvironmentVariables(cfg DeployConfiguration) error {
 
 	for key, value := range cfg.ProjectConfig.App.Environment {
 		if value.Value != "" {
-			cfg.EnvironmentVariables[key] = value.Value
+			cfg.environmentVariables[key] = value.Value
 
 			continue
 		}
@@ -38,7 +41,7 @@ func prepareEnvironmentVariables(cfg DeployConfiguration) error {
 			return err
 		}
 
-		cfg.EnvironmentVariables[key] = output.(string)
+		cfg.environmentVariables[key] = output.(string)
 	}
 
 	for key, value := range cfg.ProjectConfig.App.Secrets.FromEnv {
@@ -54,7 +57,7 @@ func prepareEnvironmentVariables(cfg DeployConfiguration) error {
 			continue
 		}
 
-		cfg.EnvironmentVariables[key] = envValue
+		cfg.environmentVariables[key] = envValue
 	}
 
 	for _, fileName := range cfg.ProjectConfig.App.Secrets.FromEnvFile {
@@ -71,7 +74,7 @@ func prepareEnvironmentVariables(cfg DeployConfiguration) error {
 		}
 
 		for key, value := range envMap {
-			cfg.EnvironmentVariables[key] = value
+			cfg.environmentVariables[key] = value
 		}
 	}
 
@@ -79,7 +82,7 @@ func prepareEnvironmentVariables(cfg DeployConfiguration) error {
 
 	for key, value := range cfg.ProjectConfig.App.InitialSecrets {
 		if _, ok := secrets[key]; ok {
-			cfg.EnvironmentVariables[key] = secrets[key]
+			cfg.environmentVariables[key] = secrets[key]
 
 			continue
 		}
@@ -94,7 +97,7 @@ func prepareEnvironmentVariables(cfg DeployConfiguration) error {
 			return err
 		}
 
-		cfg.EnvironmentVariables[key] = output.(string)
+		cfg.environmentVariables[key] = output.(string)
 		secrets[key] = output.(string)
 
 		changed = true

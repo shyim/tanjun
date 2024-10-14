@@ -3,9 +3,10 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/charmbracelet/log"
 	"math/rand/v2"
 	"time"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -17,13 +18,23 @@ import (
 	"github.com/shyim/tanjun/internal/config"
 )
 
+func newDeployConfiguration(config *config.ProjectConfig, version string) DeployConfiguration {
+	return DeployConfiguration{
+		Name:                 config.Name,
+		ImageName:            version,
+		ProjectConfig:        config,
+		environmentVariables: make(map[string]string),
+		serviceConfig:        make(map[string]interface{}),
+	}
+}
+
 type DeployConfiguration struct {
 	Name                 string
 	ImageName            string
-	NetworkName          string
 	ProjectConfig        *config.ProjectConfig
-	EnvironmentVariables map[string]string
+	environmentVariables map[string]string
 	storage              *KvClient
+	serviceConfig        map[string]interface{}
 }
 
 func (c DeployConfiguration) ContainerPrefix() string {
@@ -33,7 +44,7 @@ func (c DeployConfiguration) ContainerPrefix() string {
 func (c DeployConfiguration) GetEnvironmentVariables() []string {
 	var env []string
 
-	for key, value := range c.EnvironmentVariables {
+	for key, value := range c.environmentVariables {
 		env = append(env, key+"="+value)
 	}
 
@@ -107,7 +118,13 @@ func getAppContainerConfiguration(deployCfg DeployConfiguration) (*container.Con
 	return containerCfg, hostCfg, networkCfg
 }
 
-func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfiguration) error {
+func Deploy(ctx context.Context, client *client.Client, projectConfig *config.ProjectConfig, version string) error {
+	deployCfg := newDeployConfiguration(projectConfig, fmt.Sprintf("%s:%s", projectConfig.Image, version))
+
+	if err := PullImageIfNotThere(ctx, client, deployCfg.ImageName); err != nil {
+		return err
+	}
+
 	var err error
 	deployCfg.storage, err = CreateKVConnection(ctx, client)
 
@@ -116,10 +133,6 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 	}
 
 	defer deployCfg.storage.Close()
-
-	if err := prepareEnvironmentVariables(deployCfg); err != nil {
-		return err
-	}
 
 	if err := createEnvironmentNetwork(ctx, client, deployCfg); err != nil {
 		return err
@@ -136,6 +149,10 @@ func Deploy(ctx context.Context, client *client.Client, deployCfg DeployConfigur
 	}
 
 	if err := startServices(ctx, client, deployCfg); err != nil {
+		return err
+	}
+
+	if err := prepareEnvironmentVariables(deployCfg); err != nil {
 		return err
 	}
 
