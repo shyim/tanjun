@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/invopop/jsonschema"
-	orderedmap "github.com/wk8/go-ordered-map/v2"
 
 	"github.com/robfig/cron/v3"
 	"gopkg.in/yaml.v3"
@@ -148,16 +147,6 @@ var serviceSchema *jsonschema.Schema
 
 func SetServiceSchema(schema *jsonschema.Schema) {
 	serviceSchema = schema
-}
-
-func newOrderedMap(schemaMap map[string]*jsonschema.Schema) *orderedmap.OrderedMap[string, *jsonschema.Schema] {
-	om := orderedmap.New[string, *jsonschema.Schema]()
-
-	for key, value := range schemaMap {
-		om.Set(key, value)
-	}
-
-	return om
 }
 
 func CreateConfig(file string) (*ProjectConfig, error) {
