@@ -14,7 +14,6 @@ import (
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
-var validMySQLVersions = []string{"mysql:8.0", "mysql:8.4"}
 var supportedMySQLConfiguration = []string{
 	"sql_mode",
 	"log_bin_trust_function_creators",
@@ -93,10 +92,6 @@ func (m MySQLService) AttachInfo(serviceName string, serviceCfg config.ProjectSe
 }
 
 func (m MySQLService) Validate(serviceName string, serviceCfg config.ProjectService) error {
-	if !slices.Contains(validMySQLVersions, serviceName) {
-		return fmt.Errorf("not supported mysql version %s", serviceName)
-	}
-
 	for key := range serviceCfg.Settings {
 		if !slices.Contains(supportedMySQLConfiguration, key) {
 			return fmt.Errorf("unsupported mysql configuration key %s", key)

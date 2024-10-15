@@ -59,10 +59,6 @@ func (v ValkeyService) AttachInfo(serviceName string, serviceConfig config.Proje
 }
 
 func (v ValkeyService) Validate(serviceName string, serviceConfig config.ProjectService) error {
-	if serviceConfig.Type != "valkey:7.2" && serviceConfig.Type != "valkey:8.0" {
-		return fmt.Errorf("service %s: invalid service type %s, must be valkey:7.2 or valkey:8.0", serviceName, serviceConfig.Type)
-	}
-
 	return nil
 }
 

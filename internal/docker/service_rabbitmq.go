@@ -64,10 +64,6 @@ func (v RabbitmqService) AttachInfo(serviceName string, serviceConfig config.Pro
 }
 
 func (v RabbitmqService) Validate(serviceName string, serviceConfig config.ProjectService) error {
-	if serviceConfig.Type != "rabbitmq:4" {
-		return fmt.Errorf("invalid service type for %s: %s", serviceName, serviceConfig.Type)
-	}
-
 	return nil
 }
 

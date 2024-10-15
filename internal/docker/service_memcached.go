@@ -53,10 +53,6 @@ func (m MemcachedService) AttachInfo(serviceName string, serviceConfig config.Pr
 }
 
 func (m MemcachedService) Validate(serviceName string, serviceConfig config.ProjectService) error {
-	if serviceConfig.Type != "memcached:latest" {
-		return fmt.Errorf("service %s: invalid service type %s, must be memcached:latest", serviceName, serviceConfig.Type)
-	}
-
 	return nil
 }
 
