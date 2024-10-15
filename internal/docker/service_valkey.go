@@ -38,12 +38,8 @@ func (v ValkeyService) Deploy(ctx context.Context, client *client.Client, servic
 			return nil
 		}
 
-		if err := client.ContainerStop(ctx, existingContainer.ID, container.StopOptions{Timeout: nil}); err != nil {
-			return fmt.Errorf("failed to stop service %s (id: %s): %w", serviceName, existingContainer.ID, err)
-		}
-
-		if err := client.ContainerRemove(ctx, existingContainer.ID, container.RemoveOptions{}); err != nil {
-			return fmt.Errorf("failed to delete service %s (id: %s): %w", serviceName, existingContainer.ID, err)
+		if err := stopAndRemoveContainer(ctx, client, existingContainer.ID); err != nil {
+			return fmt.Errorf("failed to stop and remove service %s (id: %s): %w", serviceName, existingContainer.ID, err)
 		}
 	}
 

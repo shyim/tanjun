@@ -1,0 +1,7 @@
+{
+  "tasks": {
+    "build": "go build",
+    "test": "go test",
+    "launch": "go run ."
+  }
+}

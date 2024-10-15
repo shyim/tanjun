@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/invopop/jsonschema"
 	"github.com/shyim/tanjun/internal/config"
@@ -32,12 +31,8 @@ func (m MemcachedService) Deploy(ctx context.Context, client *client.Client, ser
 			return nil
 		}
 
-		if err := client.ContainerStop(ctx, existingContainer.ID, container.StopOptions{Timeout: nil}); err != nil {
-			return fmt.Errorf("failed to stop service %s (id: %s): %w", serviceName, existingContainer.ID, err)
-		}
-
-		if err := client.ContainerRemove(ctx, existingContainer.ID, container.RemoveOptions{}); err != nil {
-			return fmt.Errorf("failed to delete service %s (id: %s): %w", serviceName, existingContainer.ID, err)
+		if err := stopAndRemoveContainer(ctx, client, existingContainer.ID); err != nil {
+			return fmt.Errorf("failed to stop and remove service %s (id: %s): %w", serviceName, existingContainer.ID, err)
 		}
 	}
 
