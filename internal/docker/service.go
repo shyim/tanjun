@@ -215,3 +215,15 @@ func startService(ctx context.Context, client *client.Client, name, containerNam
 
 	return nil
 }
+
+func stopAndRemoveContainer(ctx context.Context, client *client.Client, containerID string) error {
+	if err := client.ContainerStop(ctx, containerID, container.StopOptions{Timeout: nil}); err != nil {
+		return fmt.Errorf("failed to stop container (id: %s): %w", containerID, err)
+	}
+
+	if err := client.ContainerRemove(ctx, containerID, container.RemoveOptions{}); err != nil {
+		return fmt.Errorf("failed to delete container (id: %s): %w", containerID, err)
+	}
+
+	return nil
+}
