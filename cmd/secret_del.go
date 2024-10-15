@@ -8,7 +8,7 @@ import (
 )
 
 var secretDelCmd = &cobra.Command{
-	Use:   "secret:del [id] ...",
+	Use:   "del [id] ...",
 	Short: "Delete an secret",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -57,5 +57,5 @@ var secretDelCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(secretDelCmd)
+	secretCmd.AddCommand(secretDelCmd)
 }

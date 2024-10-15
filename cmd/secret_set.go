@@ -10,7 +10,7 @@ import (
 )
 
 var secretSetCmd = &cobra.Command{
-	Use:   "secret:set [id] [key=value] ...",
+	Use:   "set [id] [key=value] ...",
 	Short: "Set a secret",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -60,5 +60,5 @@ var secretSetCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(secretSetCmd)
+	secretCmd.AddCommand(secretSetCmd)
 }
