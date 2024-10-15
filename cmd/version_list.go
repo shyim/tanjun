@@ -12,7 +12,7 @@ import (
 )
 
 var versionListCmd = &cobra.Command{
-	Use:   "version:list",
+	Use:   "list",
 	Short: "List all versions of an image",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.CreateConfig(configFile)
@@ -54,5 +54,5 @@ var versionListCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(versionListCmd)
+	versionCmd.AddCommand(versionListCmd)
 }
