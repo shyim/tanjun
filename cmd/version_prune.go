@@ -7,7 +7,7 @@ import (
 )
 
 var versionPruneCmd = &cobra.Command{
-	Use:   "version:prune",
+	Use:   "prune",
 	Short: "Remove old versions of images",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.CreateConfig(configFile)
@@ -29,5 +29,5 @@ var versionPruneCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(versionPruneCmd)
+	versionCmd.AddCommand(versionPruneCmd)
 }
