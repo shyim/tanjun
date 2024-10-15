@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/invopop/jsonschema"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 
 	"github.com/robfig/cron/v3"
 	"gopkg.in/yaml.v3"
@@ -135,8 +136,28 @@ type ProjectMount struct {
 }
 
 type ProjectService struct {
-	Type     string            `yaml:"type" jsonschema:"enum=mysql:8.0,enum=mysql:8.4,enum=valkey:7.2,enum=valkey:8.0,enum=rabbitmq:4"`
+	Type     string            `yaml:"type"`
 	Settings map[string]string `yaml:"settings"`
+}
+
+func (e ProjectService) JSONSchema() *jsonschema.Schema {
+	return serviceSchema
+}
+
+var serviceSchema *jsonschema.Schema
+
+func SetServiceSchema(schema *jsonschema.Schema) {
+	serviceSchema = schema
+}
+
+func newOrderedMap(schemaMap map[string]*jsonschema.Schema) *orderedmap.OrderedMap[string, *jsonschema.Schema] {
+	om := orderedmap.New[string, *jsonschema.Schema]()
+
+	for key, value := range schemaMap {
+		om.Set(key, value)
+	}
+
+	return om
 }
 
 func CreateConfig(file string) (*ProjectConfig, error) {

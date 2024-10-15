@@ -344,26 +344,245 @@
       ]
     },
     "ProjectService": {
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "mysql:8.0"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "sql_mode": {
+                    "type": "string"
+                  },
+                  "log_bin_trust_function_creators": {
+                    "type": "string"
+                  },
+                  "binlog_cache_size": {
+                    "type": "string"
+                  },
+                  "join_buffer_size": {
+                    "type": "string"
+                  },
+                  "innodb_log_file_size": {
+                    "type": "string"
+                  },
+                  "innodb_buffer_pool_size": {
+                    "type": "string"
+                  },
+                  "innodb_buffer_pool_instances": {
+                    "type": "string"
+                  },
+                  "group_concat_max_len": {
+                    "type": "string"
+                  },
+                  "max_connections": {
+                    "type": "string"
+                  },
+                  "max_allowed_packet": {
+                    "type": "string"
+                  },
+                  "max_binlog_size": {
+                    "type": "string"
+                  },
+                  "binlog_expire_logs_seconds": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "mysql:8.4"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "sql_mode": {
+                    "type": "string"
+                  },
+                  "log_bin_trust_function_creators": {
+                    "type": "string"
+                  },
+                  "binlog_cache_size": {
+                    "type": "string"
+                  },
+                  "join_buffer_size": {
+                    "type": "string"
+                  },
+                  "innodb_log_file_size": {
+                    "type": "string"
+                  },
+                  "innodb_buffer_pool_size": {
+                    "type": "string"
+                  },
+                  "innodb_buffer_pool_instances": {
+                    "type": "string"
+                  },
+                  "group_concat_max_len": {
+                    "type": "string"
+                  },
+                  "max_connections": {
+                    "type": "string"
+                  },
+                  "max_allowed_packet": {
+                    "type": "string"
+                  },
+                  "max_binlog_size": {
+                    "type": "string"
+                  },
+                  "binlog_expire_logs_seconds": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "rabbitmq:4"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {},
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "valkey:7.2"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "maxmemory": {
+                    "type": "string",
+                    "description": "The value can be an absolute number (bytes), a percentage of the available memory, or a percentage of the memory limit."
+                  },
+                  "maxmemory-policy": {
+                    "type": "string",
+                    "enum": [
+                      "allkeys-lru",
+                      "allkeys-lfu",
+                      "allkeys-random",
+                      "volatile-lru",
+                      "volatile-lfu",
+                      "volatile-random",
+                      "volatile-ttl",
+                      "noeviction"
+                    ],
+                    "description": "How Valkey will select what to remove when maxmemory is reached. "
+                  },
+                  "appendonly": {
+                    "type": "string",
+                    "enum": [
+                      "yes",
+                      "no"
+                    ],
+                    "description": "By default, Valkey will not persist data to disk. "
+                  },
+                  "save": {
+                    "type": "string",
+                    "description": "Save the DB to disk."
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "valkey:8.0"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "maxmemory": {
+                    "type": "string",
+                    "description": "The value can be an absolute number (bytes), a percentage of the available memory, or a percentage of the memory limit."
+                  },
+                  "maxmemory-policy": {
+                    "type": "string",
+                    "enum": [
+                      "allkeys-lru",
+                      "allkeys-lfu",
+                      "allkeys-random",
+                      "volatile-lru",
+                      "volatile-lfu",
+                      "volatile-random",
+                      "volatile-ttl",
+                      "noeviction"
+                    ],
+                    "description": "How Valkey will select what to remove when maxmemory is reached. "
+                  },
+                  "appendonly": {
+                    "type": "string",
+                    "enum": [
+                      "yes",
+                      "no"
+                    ],
+                    "description": "By default, Valkey will not persist data to disk. "
+                  },
+                  "save": {
+                    "type": "string",
+                    "description": "Save the DB to disk."
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        }
+      ],
       "properties": {
         "type": {
           "type": "string",
           "enum": [
             "mysql:8.0",
             "mysql:8.4",
+            "rabbitmq:4",
             "valkey:7.2",
-            "valkey:8.0",
-            "rabbitmq:4"
+            "valkey:8.0"
           ]
-        },
-        "settings": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object"
         }
       },
-      "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "required": [
+        "type"
+      ]
     },
     "ProjectWorker": {
       "properties": {

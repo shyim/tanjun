@@ -8,7 +8,9 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/invopop/jsonschema"
 	"github.com/shyim/tanjun/internal/config"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 type ValkeyService struct {
@@ -62,4 +64,42 @@ func (v ValkeyService) Validate(serviceName string, serviceConfig config.Project
 	}
 
 	return nil
+}
+
+func (v ValkeyService) SupportedTypes() []string {
+	return []string{"valkey:7.2", "valkey:8.0"}
+}
+
+func (v ValkeyService) ConfigSchema(serviceType string) *jsonschema.Schema {
+	properties := orderedmap.New[string, *jsonschema.Schema]()
+	properties.Set("maxmemory", &jsonschema.Schema{
+		Type:        "string",
+		Description: "The value can be an absolute number (bytes), a percentage of the available memory, or a percentage of the memory limit.",
+	})
+
+	properties.Set("maxmemory-policy", &jsonschema.Schema{
+		Type:        "string",
+		Enum:        []interface{}{"allkeys-lru", "allkeys-lfu", "allkeys-random", "volatile-lru", "volatile-lfu", "volatile-random", "volatile-ttl", "noeviction"},
+		Description: "How Valkey will select what to remove when maxmemory is reached. ",
+	})
+
+	properties.Set("appendonly", &jsonschema.Schema{
+		Type:        "string",
+		Enum:        []interface{}{"yes", "no"},
+		Description: "By default, Valkey will not persist data to disk. ",
+	})
+
+	properties.Set("save", &jsonschema.Schema{
+		Type:        "string",
+		Description: "Save the DB to disk.",
+	})
+
+	return &jsonschema.Schema{
+		Type:       "object",
+		Properties: properties,
+	}
+}
+
+func init() {
+	allServices = append(allServices, ValkeyService{})
 }

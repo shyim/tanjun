@@ -3,11 +3,11 @@ package docker
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/invopop/jsonschema"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -22,18 +22,29 @@ type AppService interface {
 	Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *types.ContainerJSON) error
 	AttachInfo(serviceName string, serviceConfig config.ProjectService) interface{}
 	Validate(serviceName string, serviceConfig config.ProjectService) error
+	SupportedTypes() []string
+	ConfigSchema(serviceType string) *jsonschema.Schema
+}
+
+var allServices []AppService
+
+func GetAllServices() []AppService {
+	return allServices
 }
 
 func newService(serviceType string, serviceConfig config.ProjectService) (AppService, error) {
 	var svc AppService
 
-	if strings.HasPrefix(serviceType, "mysql:") {
-		svc = &MySQLService{}
-	} else if strings.HasPrefix(serviceType, "valkey:") {
-		svc = &ValkeyService{}
-	} else if strings.HasPrefix(serviceType, "rabbitmq:") {
-		svc = &RabbitmqService{}
-	} else {
+	for _, s := range allServices {
+		for _, supportedType := range s.SupportedTypes() {
+			if supportedType == serviceType {
+				svc = s
+				break
+			}
+		}
+	}
+
+	if svc == nil {
 		return nil, fmt.Errorf("service type %s not supported", serviceType)
 	}
 

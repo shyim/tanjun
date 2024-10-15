@@ -167,7 +167,7 @@ func getRequiredPHPPackages(phpVersion string, composerJson ComposerJson, lock C
 	packages[fmt.Sprintf("php-%s-opcache", phpVersion)] = fmt.Sprintf("php-%s-opcache", phpVersion)
 
 	for _, pkg := range lock.Packages {
-		for name, _ := range pkg.Require {
+		for name := range pkg.Require {
 			if !strings.HasPrefix(name, "ext-") {
 				continue
 			}
@@ -176,7 +176,7 @@ func getRequiredPHPPackages(phpVersion string, composerJson ComposerJson, lock C
 		}
 	}
 
-	for name, _ := range composerJson.Replace {
+	for name := range composerJson.Replace {
 		if !strings.HasPrefix(name, "symfony/polyfill-") {
 			continue
 		}

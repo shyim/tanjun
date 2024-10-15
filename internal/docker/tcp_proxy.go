@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
@@ -35,7 +36,7 @@ func CreateTCPProxy(ctx context.Context, client *client.Client, externalHost str
 
 	networkName := ""
 
-	for name, _ := range inspect.NetworkSettings.Networks {
+	for name := range inspect.NetworkSettings.Networks {
 		networkName = name
 		break
 	}

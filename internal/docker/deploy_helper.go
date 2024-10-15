@@ -53,7 +53,7 @@ func findPortMapping(cfg DeployConfiguration, container types.ContainerJSON) str
 		return string(rune(cfg.ProjectConfig.Proxy.AppPort))
 	}
 
-	for p, _ := range container.NetworkSettings.Ports {
+	for p := range container.NetworkSettings.Ports {
 		if p.Proto() == "udp" {
 			continue
 		}

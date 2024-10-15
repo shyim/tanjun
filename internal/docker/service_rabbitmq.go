@@ -8,7 +8,9 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/invopop/jsonschema"
 	"github.com/shyim/tanjun/internal/config"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 type RabbitmqService struct {
@@ -67,4 +69,21 @@ func (v RabbitmqService) Validate(serviceName string, serviceConfig config.Proje
 	}
 
 	return nil
+}
+
+func (v RabbitmqService) SupportedTypes() []string {
+	return []string{"rabbitmq:4"}
+}
+
+func (v RabbitmqService) ConfigSchema(serviceType string) *jsonschema.Schema {
+	properties := orderedmap.New[string, *jsonschema.Schema]()
+
+	return &jsonschema.Schema{
+		Type:       "object",
+		Properties: properties,
+	}
+}
+
+func init() {
+	allServices = append(allServices, RabbitmqService{})
 }

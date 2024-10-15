@@ -9,7 +9,9 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/invopop/jsonschema"
 	"github.com/shyim/tanjun/internal/config"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 var validMySQLVersions = []string{"mysql:8.0", "mysql:8.4"}
@@ -102,4 +104,27 @@ func (m MySQLService) Validate(serviceName string, serviceCfg config.ProjectServ
 	}
 
 	return nil
+}
+
+func (m MySQLService) SupportedTypes() []string {
+	return []string{"mysql:8.0", "mysql:8.4"}
+}
+
+func (m MySQLService) ConfigSchema(serviceType string) *jsonschema.Schema {
+	properties := orderedmap.New[string, *jsonschema.Schema]()
+
+	for _, key := range supportedMySQLConfiguration {
+		properties.Set(key, &jsonschema.Schema{
+			Type: "string",
+		})
+	}
+
+	return &jsonschema.Schema{
+		Type:       "object",
+		Properties: properties,
+	}
+}
+
+func init() {
+	allServices = append(allServices, MySQLService{})
 }
