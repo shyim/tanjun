@@ -10,7 +10,7 @@ import (
 )
 
 var secretListCmd = &cobra.Command{
-	Use:   "secret:list",
+	Use:   "list",
 	Short: "List all secrets",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.CreateConfig(configFile)
@@ -55,5 +55,5 @@ var secretListCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(secretListCmd)
+	secretCmd.AddCommand(secretListCmd)
 }
