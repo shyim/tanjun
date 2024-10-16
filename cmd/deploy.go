@@ -97,6 +97,16 @@ var deployCmd = &cobra.Command{
 			return err
 		}
 
+		services, err := docker.ProjectListServices(cmd.Context(), client, cfg)
+
+		if err != nil {
+			return err
+		}
+
+		if services.HasDanlingServices() {
+			log.Warnf("There are dangling services, run `tanjun service list` to see them and `tanjun service rm [name]` to remove them")
+		}
+
 		return nil
 	},
 }

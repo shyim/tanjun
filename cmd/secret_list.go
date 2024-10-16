@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/charmbracelet/lipgloss"
+
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
@@ -40,8 +40,6 @@ var secretListCmd = &cobra.Command{
 		}
 
 		t := table.New().
-			Border(lipgloss.NormalBorder()).
-			BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
 			Headers("Key", "Value")
 
 		for key, value := range secrets {

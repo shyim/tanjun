@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/charmbracelet/lipgloss"
+	"strings"
+
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/charmbracelet/log"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 var versionListCmd = &cobra.Command{
@@ -36,8 +36,6 @@ var versionListCmd = &cobra.Command{
 		}
 
 		t := table.New().
-			Border(lipgloss.NormalBorder()).
-			BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("99"))).
 			Headers("Name", "Aliases", "Created at")
 
 		for _, version := range versions {
