@@ -35,6 +35,7 @@ type DeployConfiguration struct {
 	environmentVariables map[string]string
 	storage              *KvClient
 	serviceConfig        map[string]interface{}
+	imageConfig          *container.Config
 }
 
 func (c DeployConfiguration) ContainerPrefix() string {
@@ -125,7 +126,14 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 		return err
 	}
 
-	var err error
+	image, _, err := client.ImageInspectWithRaw(ctx, deployCfg.ImageName)
+
+	if err != nil {
+		return err
+	}
+
+	deployCfg.imageConfig = image.Config
+
 	deployCfg.storage, err = CreateKVConnection(ctx, client)
 
 	if err != nil {
@@ -331,8 +339,8 @@ func createAppServerVolumes(ctx context.Context, client *client.Client, deployCf
 		return err
 	}
 
-	for _, appMount := range deployCfg.ProjectConfig.App.Mounts {
-		expectedVolumeName := fmt.Sprintf("%s_app_%s", deployCfg.ContainerPrefix(), appMount.Name)
+	for mountName, _ := range deployCfg.ProjectConfig.App.Mounts {
+		expectedVolumeName := fmt.Sprintf("%s_app_%s", deployCfg.ContainerPrefix(), mountName)
 
 		found := false
 
@@ -387,21 +395,20 @@ func createAppServerVolumes(ctx context.Context, client *client.Client, deployCf
 }
 
 func addAppServerVolumes(deployCfg DeployConfiguration, hostCfg *container.HostConfig) {
-	for _, appMount := range deployCfg.ProjectConfig.App.Mounts {
+	for mountName, appMount := range deployCfg.ProjectConfig.App.Mounts {
 		if appMount.Path == "" {
 			continue
 		}
 
 		if appMount.Path[0] != '/' {
-			appMount.Path = fmt.Sprintf("/var/www/html/%s", appMount.Path)
+			appMount.Path = fmt.Sprintf("%s/%s", deployCfg.imageConfig.WorkingDir, appMount.Path)
 		}
 
 		hostCfg.Mounts = append(hostCfg.Mounts, mount.Mount{
 			Type:   mount.TypeVolume,
-			Source: fmt.Sprintf("%s_app_%s", deployCfg.ContainerPrefix(), appMount.Name),
+			Source: fmt.Sprintf("%s_app_%s", deployCfg.ContainerPrefix(), mountName),
 			Target: appMount.Path,
 			VolumeOptions: &mount.VolumeOptions{
-
 				Labels: map[string]string{
 					"tanjun":         "true",
 					"tanjun.project": deployCfg.Name,

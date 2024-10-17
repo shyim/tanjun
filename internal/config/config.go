@@ -86,7 +86,7 @@ type ProjectApp struct {
 			Secret []ProjectOnePassword `yaml:"items,omitempty"`
 		} `yaml:"onepassword,omitempty"`
 	} `yaml:"secrets,omitempty"`
-	Mounts   []ProjectMount           `yaml:"mounts,omitempty"`
+	Mounts   map[string]ProjectMount  `yaml:"mounts,omitempty"`
 	Workers  map[string]ProjectWorker `yaml:"workers,omitempty"`
 	Cronjobs []ProjectCronjob         `yaml:"cronjobs,omitempty"`
 	Hooks    struct {
@@ -130,7 +130,6 @@ type ProjectEnvironment struct {
 }
 
 type ProjectMount struct {
-	Name string `yaml:"name" jsonschema:"required"`
 	Path string `yaml:"path" jsonschema:"required"`
 }
 

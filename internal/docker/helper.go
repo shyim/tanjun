@@ -5,6 +5,11 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"io"
+	"os"
+	"slices"
+	"strings"
+
 	"github.com/charmbracelet/log"
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/cli/cli/config/configfile"
@@ -12,10 +17,6 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"io"
-	"os"
-	"slices"
-	"strings"
 )
 
 var configFile *configfile.ConfigFile
