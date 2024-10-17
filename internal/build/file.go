@@ -2,6 +2,7 @@ package build
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path"
 	"slices"
@@ -19,7 +20,7 @@ func getDockerFile(root string, config *config.ProjectConfig) ([]byte, []string,
 		build, err := buildpack.GenerateImageFile(root)
 
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("failed to generate Dockerfile: %w", err)
 		}
 
 		dockerFile = []byte(build.Dockerfile)

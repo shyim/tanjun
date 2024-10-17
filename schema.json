@@ -349,6 +349,32 @@
           "if": {
             "properties": {
               "type": {
+                "const": "memcached:latest"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "memory-limit": {
+                    "type": "string",
+                    "description": "The maximum amount of memory the server is allowed to use for item storage."
+                  },
+                  "max-connections": {
+                    "type": "integer",
+                    "description": "The maximum number of simultaneous connections to the server."
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "mysql:8.0"
               }
             }
@@ -448,6 +474,23 @@
                     "type": "string"
                   }
                 },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "opensearch:2.17.1"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {},
                 "type": "object"
               }
             }
@@ -571,8 +614,10 @@
         "type": {
           "type": "string",
           "enum": [
+            "memcached:latest",
             "mysql:8.0",
             "mysql:8.4",
+            "opensearch:2.17.1",
             "rabbitmq:4",
             "valkey:7.2",
             "valkey:8.0"

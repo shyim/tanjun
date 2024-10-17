@@ -67,7 +67,7 @@ func generateByNodeJS(project string) (*GeneratedImageResult, error) {
 	var packageJSON PackageJSON
 
 	if err := readJSONFile(path.Join(project, "package.json"), &packageJSON); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read package.json: %w", err)
 	}
 
 	nodeVersion := detectNodeVersion(packageJSON)

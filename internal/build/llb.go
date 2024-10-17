@@ -3,6 +3,7 @@ package build
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/docker/docker/api/types/system"
 	"github.com/moby/buildkit/client/llb"
@@ -41,7 +42,7 @@ func llbFromProject(ctx context.Context, info system.Info) (string, *llb.Definit
 	})
 
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to convert Dockerfile to LLB: %w", err)
 	}
 
 	def, err := state.Marshal(ctx)
@@ -53,7 +54,7 @@ func llbFromProject(ctx context.Context, info system.Info) (string, *llb.Definit
 	containerConfig, err := json.Marshal(img)
 
 	if err != nil {
-		return "", nil, err
+		return "", nil, fmt.Errorf("failed to marshal image: %w", err)
 	}
 
 	return string(containerConfig), def, nil

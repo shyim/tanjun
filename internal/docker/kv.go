@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"io"
 )
 
 type KvClient struct {
