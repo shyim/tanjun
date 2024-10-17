@@ -3,6 +3,7 @@ package build
 import (
 	"context"
 	"fmt"
+	"github.com/pterm/pterm"
 	"os"
 	"os/signal"
 
@@ -51,10 +52,18 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 	ctx = context.WithValue(ctx, contextDockerClientField, dockerClient)
 	ctx = context.WithValue(ctx, contextRemoteClientField, remoteClient)
 
+	spinnerInfo, err := pterm.DefaultSpinner.Start("Starting buildkitd")
+
+	if err != nil {
+		return "", err
+	}
+
 	containerId, err := startBuildkitd(ctx, dockerClient)
 	if err != nil {
 		return "", err
 	}
+
+	spinnerInfo.Success("Started buildkitd")
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)

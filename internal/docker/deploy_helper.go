@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"github.com/pterm/pterm"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -36,6 +37,16 @@ func stopContainers(ctx context.Context, client *client.Client, containers []typ
 }
 
 func removeContainers(ctx context.Context, client *client.Client, containers []types.Container) error {
+	if len(containers) == 0 {
+		return nil
+	}
+
+	spinnerInfo, spinnerErr := pterm.DefaultSpinner.Start("Removing old containers")
+
+	if spinnerErr != nil {
+		return spinnerErr
+	}
+
 	var err errgroup.Group
 
 	for _, c := range containers {
@@ -45,7 +56,14 @@ func removeContainers(ctx context.Context, client *client.Client, containers []t
 		})
 	}
 
-	return err.Wait()
+	if err := err.Wait(); err != nil {
+		spinnerInfo.Fail("Failed to remove containers")
+		return err
+	}
+
+	spinnerInfo.Success("Removed old containers")
+
+	return nil
 }
 
 func findPortMapping(cfg DeployConfiguration, container types.ContainerJSON) string {

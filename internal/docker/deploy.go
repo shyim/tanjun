@@ -3,6 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
+	"github.com/pterm/pterm"
 	"math/rand/v2"
 	"time"
 
@@ -228,7 +229,11 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 		return err
 	}
 
-	log.Infof("Starting to route new traffic to new container")
+	spinnerInfo, err := pterm.DefaultSpinner.Start("Routing new traffic to new container")
+
+	if err != nil {
+		return err
+	}
 
 	proxyHost := containerInspect.NetworkSettings.Networks["tanjun-public"].IPAddress
 	proxyPort := findPortMapping(deployCfg, containerInspect)
@@ -272,6 +277,8 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 	removalContainers := append(beforeContainers, beforeWorkers...)
 
 	if err := configureKamalService(ctx, client, kamalCmd); err != nil {
+		spinnerInfo.Fail(err)
+
 		// If we fail to configure kamal, we should stop the container and remove it
 		if restoreErr := client.ContainerKill(ctx, resp.ID, "SIGKILL"); restoreErr != nil {
 			return fmt.Errorf("kamal configure failed: %w and could not stop the new container: %s", err, restoreErr)
@@ -290,8 +297,7 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 		return err
 	}
 
-	log.Infof("Routing new traffic to new container successful")
-	log.Infof("Removing old containers")
+	spinnerInfo.Success("Routing new traffic to new container successful")
 
 	if err := removeContainers(ctx, client, append(removalContainers, beforeCronjobs...)); err != nil {
 		return err
@@ -310,7 +316,7 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 		log.Infof("You can rollback to the previous version with tanjun deploy --rollback")
 	}
 
-	return VersionDrain(ctx, client, deployCfg.ProjectConfig.Image, deployCfg.ProjectConfig.KeepVersions)
+	return VersionDrain(ctx, client, deployCfg.ProjectConfig)
 }
 
 func createAppServerVolumes(ctx context.Context, client *client.Client, deployCfg DeployConfiguration) error {

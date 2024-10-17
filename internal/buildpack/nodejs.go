@@ -84,6 +84,8 @@ func generateByNodeJS(project string) (*GeneratedImageResult, error) {
 
 	if runtime == "node" {
 		result.Add("RUN apk add --no-cache nodejs-%s npm", nodeVersion)
+	} else if runtime == "bun" {
+		packageManager = "bun"
 	}
 
 	if packageManager == "bun" && runtime != "bun" {

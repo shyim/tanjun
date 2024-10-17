@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/pterm/pterm"
 )
 
 type dockerMessage struct {
@@ -20,8 +22,14 @@ type dockerMessage struct {
 	Progress string `json:"progress"`
 }
 
-func logDockerResponse(response io.ReadCloser) error {
+func logDockerResponse(name string, response io.ReadCloser) error {
 	defer response.Close()
+
+	spinnerInfo, err := pterm.DefaultSpinner.Start(fmt.Sprintf("Pulling image: %s", name))
+
+	if err != nil {
+		return err
+	}
 
 	scanner := bufio.NewScanner(response)
 	msg := dockerMessage{}
@@ -42,10 +50,12 @@ func logDockerResponse(response io.ReadCloser) error {
 		}
 
 		if msg.Error != "" {
+			spinnerInfo.Fail(msg.Error)
 			return fmt.Errorf("docker error: %s", msg.Error)
 		}
 
 		if msg.ErrorDetail.Message != "" {
+			spinnerInfo.Fail(msg.ErrorDetail.Message)
 			return fmt.Errorf("docker error: %s", msg.ErrorDetail.Message)
 		}
 
@@ -55,14 +65,16 @@ func logDockerResponse(response io.ReadCloser) error {
 
 		if msg.Status != "" {
 			if msg.Progress != "" {
-				fmt.Fprintf(os.Stdout, "%s :: %s :: %s\n", msg.Status, msg.ID, msg.Progress)
+				spinnerInfo.UpdateText(msg.Progress)
 			} else {
-				fmt.Fprintf(os.Stdout, "%s :: %s\n", msg.Status, msg.ID)
+				spinnerInfo.UpdateText(msg.Status)
 			}
 		} else if msg.Stream != "" {
-			fmt.Fprintf(os.Stdout, "%s\n", msg.Stream)
+			spinnerInfo.UpdateText(msg.Stream)
 		}
 	}
+
+	spinnerInfo.Success(fmt.Sprintf("Image pulled: %s", name))
 
 	return nil
 }

@@ -10,7 +10,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/charmbracelet/log"
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/docker/api/types/container"
@@ -42,8 +41,6 @@ func PullImageIfNotThere(ctx context.Context, client *client.Client, imageName s
 	}
 
 	if !imageExists {
-		log.Infof("Pulling image: %s", imageName)
-
 		opts := image.PullOptions{}
 
 		hasAuth, authStr := loadAuthInfo(imageName)
@@ -58,7 +55,7 @@ func PullImageIfNotThere(ctx context.Context, client *client.Client, imageName s
 			return err
 		}
 
-		if err := logDockerResponse(reader); err != nil {
+		if err := logDockerResponse(imageName, reader); err != nil {
 			return err
 		}
 	}

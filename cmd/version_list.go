@@ -29,7 +29,7 @@ var versionListCmd = &cobra.Command{
 
 		defer client.Close()
 
-		versions, err := docker.VersionList(cmd.Context(), client, cfg.Image)
+		versions, err := docker.VersionList(cmd.Context(), client, cfg)
 
 		if err != nil {
 			return err

@@ -33,7 +33,7 @@ var deployCmd = &cobra.Command{
 		version, _ := cmd.Flags().GetString("version")
 
 		if rollback {
-			version, err = docker.VersionCurrentlyActive(cmd.Context(), client, cfg.Name)
+			version, err = docker.VersionCurrentlyActive(cmd.Context(), client, cfg)
 
 			if err != nil {
 				return err
@@ -41,7 +41,7 @@ var deployCmd = &cobra.Command{
 
 			log.Infof("Current version is %s", version)
 
-			versions, err := docker.VersionList(cmd.Context(), client, cfg.Image)
+			versions, err := docker.VersionList(cmd.Context(), client, cfg)
 
 			if err != nil {
 				return err
@@ -70,7 +70,7 @@ var deployCmd = &cobra.Command{
 
 			log.Infof("Rolling back to version %s", version)
 		} else if version == "current" {
-			version, err = docker.VersionCurrentlyActive(cmd.Context(), client, cfg.Name)
+			version, err = docker.VersionCurrentlyActive(cmd.Context(), client, cfg)
 
 			if err != nil {
 				return err

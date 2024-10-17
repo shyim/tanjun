@@ -24,7 +24,7 @@ var versionPruneCmd = &cobra.Command{
 
 		defer client.Close()
 
-		return docker.VersionDrain(cmd.Context(), client, cfg.Image, cfg.KeepVersions)
+		return docker.VersionDrain(cmd.Context(), client, cfg)
 	},
 }
 

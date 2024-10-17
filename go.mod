@@ -17,6 +17,7 @@ require (
 	github.com/moby/patternmatcher v0.6.0
 	github.com/moby/term v0.5.0
 	github.com/opencontainers/image-spec v1.1.0
+	github.com/pterm/pterm v0.12.79
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shyim/go-version v0.0.0-20240530110323-4b7091cee42c
 	github.com/sirupsen/logrus v1.9.3
@@ -25,6 +26,15 @@ require (
 	golang.org/x/sync v0.8.0
 	golang.org/x/term v0.24.0
 	gopkg.in/yaml.v3 v3.0.1
+)
+
+require (
+	atomicgo.dev/cursor v0.2.0 // indirect
+	atomicgo.dev/keyboard v0.2.9 // indirect
+	atomicgo.dev/schedule v0.1.0 // indirect
+	github.com/gookit/color v1.5.4 // indirect
+	github.com/lithammer/fuzzysearch v1.1.8 // indirect
+	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 )
 
 require (
