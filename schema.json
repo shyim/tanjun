@@ -48,10 +48,10 @@
           "type": "object"
         },
         "mounts": {
-          "items": {
+          "additionalProperties": {
             "$ref": "#/$defs/ProjectMount"
           },
-          "type": "array"
+          "type": "object"
         },
         "workers": {
           "additionalProperties": {
@@ -226,9 +226,6 @@
     },
     "ProjectMount": {
       "properties": {
-        "name": {
-          "type": "string"
-        },
         "path": {
           "type": "string"
         }
@@ -236,7 +233,6 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
         "path"
       ]
     },
@@ -500,6 +496,258 @@
           "if": {
             "properties": {
               "type": {
+                "const": "postgres:17"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "max_connections": {
+                    "type": "string"
+                  },
+                  "shared_buffers": {
+                    "type": "string"
+                  },
+                  "effective_cache_size": {
+                    "type": "string"
+                  },
+                  "maintenance_work_mem": {
+                    "type": "string"
+                  },
+                  "checkpoint_completion_target": {
+                    "type": "string"
+                  },
+                  "wal_buffers": {
+                    "type": "string"
+                  },
+                  "default_statistics_target": {
+                    "type": "string"
+                  },
+                  "random_page_cost": {
+                    "type": "string"
+                  },
+                  "effective_io_concurrency": {
+                    "type": "string"
+                  },
+                  "work_mem": {
+                    "type": "string"
+                  },
+                  "min_wal_size": {
+                    "type": "string"
+                  },
+                  "max_wal_size": {
+                    "type": "string"
+                  },
+                  "max_worker_processes": {
+                    "type": "string"
+                  },
+                  "max_parallel_workers_per_gather": {
+                    "type": "string"
+                  },
+                  "max_parallel_workers": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "postgres:16"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "max_connections": {
+                    "type": "string"
+                  },
+                  "shared_buffers": {
+                    "type": "string"
+                  },
+                  "effective_cache_size": {
+                    "type": "string"
+                  },
+                  "maintenance_work_mem": {
+                    "type": "string"
+                  },
+                  "checkpoint_completion_target": {
+                    "type": "string"
+                  },
+                  "wal_buffers": {
+                    "type": "string"
+                  },
+                  "default_statistics_target": {
+                    "type": "string"
+                  },
+                  "random_page_cost": {
+                    "type": "string"
+                  },
+                  "effective_io_concurrency": {
+                    "type": "string"
+                  },
+                  "work_mem": {
+                    "type": "string"
+                  },
+                  "min_wal_size": {
+                    "type": "string"
+                  },
+                  "max_wal_size": {
+                    "type": "string"
+                  },
+                  "max_worker_processes": {
+                    "type": "string"
+                  },
+                  "max_parallel_workers_per_gather": {
+                    "type": "string"
+                  },
+                  "max_parallel_workers": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "postgres:15"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "max_connections": {
+                    "type": "string"
+                  },
+                  "shared_buffers": {
+                    "type": "string"
+                  },
+                  "effective_cache_size": {
+                    "type": "string"
+                  },
+                  "maintenance_work_mem": {
+                    "type": "string"
+                  },
+                  "checkpoint_completion_target": {
+                    "type": "string"
+                  },
+                  "wal_buffers": {
+                    "type": "string"
+                  },
+                  "default_statistics_target": {
+                    "type": "string"
+                  },
+                  "random_page_cost": {
+                    "type": "string"
+                  },
+                  "effective_io_concurrency": {
+                    "type": "string"
+                  },
+                  "work_mem": {
+                    "type": "string"
+                  },
+                  "min_wal_size": {
+                    "type": "string"
+                  },
+                  "max_wal_size": {
+                    "type": "string"
+                  },
+                  "max_worker_processes": {
+                    "type": "string"
+                  },
+                  "max_parallel_workers_per_gather": {
+                    "type": "string"
+                  },
+                  "max_parallel_workers": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "postgres:14"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "max_connections": {
+                    "type": "string"
+                  },
+                  "shared_buffers": {
+                    "type": "string"
+                  },
+                  "effective_cache_size": {
+                    "type": "string"
+                  },
+                  "maintenance_work_mem": {
+                    "type": "string"
+                  },
+                  "checkpoint_completion_target": {
+                    "type": "string"
+                  },
+                  "wal_buffers": {
+                    "type": "string"
+                  },
+                  "default_statistics_target": {
+                    "type": "string"
+                  },
+                  "random_page_cost": {
+                    "type": "string"
+                  },
+                  "effective_io_concurrency": {
+                    "type": "string"
+                  },
+                  "work_mem": {
+                    "type": "string"
+                  },
+                  "min_wal_size": {
+                    "type": "string"
+                  },
+                  "max_wal_size": {
+                    "type": "string"
+                  },
+                  "max_worker_processes": {
+                    "type": "string"
+                  },
+                  "max_parallel_workers_per_gather": {
+                    "type": "string"
+                  },
+                  "max_parallel_workers": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "rabbitmq:4"
               }
             }
@@ -618,6 +866,10 @@
             "mysql:8.0",
             "mysql:8.4",
             "opensearch:2.17.1",
+            "postgres:17",
+            "postgres:16",
+            "postgres:15",
+            "postgres:14",
             "rabbitmq:4",
             "valkey:7.2",
             "valkey:8.0"
