@@ -3,9 +3,10 @@ package build
 import (
 	"context"
 	"fmt"
-	"github.com/pterm/pterm"
 	"os"
 	"os/signal"
+
+	"github.com/pterm/pterm"
 
 	"github.com/docker/docker/client"
 	buildkit "github.com/moby/buildkit/client"
@@ -41,7 +42,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 
 	defer remoteClient.Close()
 
-	dockerClient, err = client.NewClientWithOpts(client.FromEnv)
+	dockerClient, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
 	if err != nil {
 		return "", err
