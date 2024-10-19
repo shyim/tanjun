@@ -9,7 +9,7 @@ on:
 jobs:
   examples:
     runs-on: ubuntu-latest
-    name: Try to Deploy ${{ matrix.example }}
+    name: ${{ matrix.example }}
     strategy:
       fail-fast: false
       matrix:
