@@ -42,6 +42,7 @@ func (p PostgresService) Deploy(ctx context.Context, client *client.Client, serv
 
 	containerCfg.Image = "postgres:alpine"
 	containerCfg.Env = append(containerCfg.Env, "POSTGRES_DB=database", "POSTGRES_USER=user", "POSTGRES_PASSWORD=password")
+	containerCfg.Cmd = []string{"postgres"}
 
 	hostCfg.Mounts = []mount.Mount{
 		{

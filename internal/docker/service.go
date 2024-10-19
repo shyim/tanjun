@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/charmbracelet/log"
 	"github.com/invopop/jsonschema"
+	"github.com/pterm/pterm"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -172,6 +172,12 @@ func getDefaultServiceContainers(cfg DeployConfiguration, name string) (string, 
 }
 
 func startService(ctx context.Context, client *client.Client, name, containerName string, containerCfg *container.Config, hostCfg *container.HostConfig, networkCfg *network.NetworkingConfig) error {
+	spinnerInfo, err := pterm.DefaultSpinner.Start(fmt.Sprintf("Starting service: %s", name))
+
+	if err != nil {
+		return err
+	}
+
 	if err := PullImageIfNotThere(ctx, client, containerCfg.Image); err != nil {
 		return err
 	}
@@ -186,7 +192,8 @@ func startService(ctx context.Context, client *client.Client, name, containerNam
 		return err
 	}
 
-	log.Infof("Started service: %s, waiting to be healthy", name)
+	spinnerInfo.UpdateText(fmt.Sprintf("Started service: %s, waiting to be healhty", name))
+
 	timeOut := 300
 
 	for {
@@ -208,11 +215,12 @@ func startService(ctx context.Context, client *client.Client, name, containerNam
 		time.Sleep(time.Second)
 
 		if timeOut == 0 {
+			spinnerInfo.Fail("Service did not start in time")
 			return fmt.Errorf("service %s did not start in time", name)
 		}
 	}
 
-	log.Infof("Service %s is healthy", name)
+	spinnerInfo.Success(fmt.Sprintf("Service %s is healthy", name))
 
 	return nil
 }

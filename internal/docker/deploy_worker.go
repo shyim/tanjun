@@ -7,12 +7,19 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/pterm/pterm"
 	"github.com/shyim/tanjun/internal/config"
 	"golang.org/x/sync/errgroup"
 )
 
 func startWorkers(ctx context.Context, client *client.Client, deployConfig DeployConfiguration) error {
+	if len(deployConfig.ProjectConfig.App.Workers) == 0 {
+		return nil
+	}
+
 	var errgroup errgroup.Group
+
+	spinnerInfo, _ := pterm.DefaultSpinner.Start("Starting Workers")
 
 	for workerName, worker := range deployConfig.ProjectConfig.App.Workers {
 		worker := worker
@@ -22,7 +29,13 @@ func startWorkers(ctx context.Context, client *client.Client, deployConfig Deplo
 		})
 	}
 
-	return errgroup.Wait()
+	if err := errgroup.Wait(); err != nil {
+		spinnerInfo.Fail("Error starting workers %s", err)
+	}
+
+	spinnerInfo.Success("Workers started")
+
+	return nil
 }
 
 func startWorker(ctx context.Context, client *client.Client, deployCfg DeployConfiguration, worker config.ProjectWorker, workerName string) error {

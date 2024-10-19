@@ -3,9 +3,10 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/pterm/pterm"
 	"math/rand/v2"
-	"time"
+	"runtime/pprof"
+
+	"github.com/pterm/pterm"
 
 	"github.com/charmbracelet/log"
 
@@ -171,26 +172,26 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 		return err
 	}
 
-	if len(beforeWorkers) > 0 {
-		log.Info("Stopping old worker containers")
-
-		if err := stopContainers(ctx, client, beforeWorkers); err != nil {
-			return err
-		}
-	}
-
 	beforeCronjobs, err := getCronjobEnvironmentContainers(ctx, client, deployCfg.Name)
 
 	if err != nil {
 		return err
 	}
 
-	if len(beforeCronjobs) > 0 {
-		log.Info("Stopping old cronjob containers")
+	allSideContainers := append(beforeWorkers, beforeCronjobs...)
 
-		if err := stopContainers(ctx, client, beforeCronjobs); err != nil {
+	if len(allSideContainers) > 0 {
+		spinnerInfo, err := pterm.DefaultSpinner.Start("Draining old side containers like workers and cronjobs")
+
+		if err != nil {
 			return err
 		}
+
+		if err := stopContainers(ctx, client, allSideContainers); err != nil {
+			return err
+		}
+
+		spinnerInfo.Success("Drained old side containers")
 	}
 
 	if len(deployCfg.ProjectConfig.App.Hooks.Deploy) > 0 {
@@ -219,7 +220,6 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 	if err != nil {
 		return err
 	}
-	time.Sleep(5 * time.Second)
 
 	if err := startWorkers(ctx, client, deployCfg); err != nil {
 		return err
@@ -315,6 +315,8 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 	if len(beforeContainers) > 0 {
 		log.Infof("You can rollback to the previous version with tanjun deploy --rollback")
 	}
+
+	pprof.StopCPUProfile()
 
 	return VersionDrain(ctx, client, deployCfg.ProjectConfig)
 }
