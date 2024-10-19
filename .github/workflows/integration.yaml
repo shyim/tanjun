@@ -18,11 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
       - name: Build
         run: go install .
-
-      - name: Add tanjun to PATH
-        run: echo "::add-path::$(go env GOPATH)/bin"
 
       - name: Setup
         working-directory: examples/${{ matrix.example }}
