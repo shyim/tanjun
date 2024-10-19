@@ -1,0 +1,32 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  examples:
+    runs-on: ubuntu-latest
+    name: Try to Deploy ${{ matrix.example }}
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - bun
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: go install .
+
+      - name: Deploy
+        working-directory: examples/${{ matrix.example }}
+        run: tanjun deploy
+
+      - name: Test
+        working-directory: examples/${{ matrix.example }}
+        run: bash .test.sh

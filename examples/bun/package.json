@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "dependencies": {
+    "hono": "^4.6.4"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.11"
+  }
+}
