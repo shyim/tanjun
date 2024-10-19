@@ -10,6 +10,7 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     name: ${{ matrix.example }}
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:

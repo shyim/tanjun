@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/charmbracelet/log"
 	"github.com/pterm/pterm"
 
 	"github.com/docker/docker/client"
@@ -104,17 +103,29 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		return "", err
 	}
 
-	waitChain := make(chan struct{})
+	waitChain := make(chan error)
 
 	if config.RemoteBuild {
 		pr, pw := io.Pipe()
 
 		go func() {
-			if _, err := dockerClient.ImageLoad(ctx, pr, false); err != nil {
-				log.Warnf("Failed to load image to remote daemon: %s", err)
+			resp, err := dockerClient.ImageLoad(ctx, pr, false)
+
+			if err != nil {
+				waitChain <- err
+				return
 			}
 
-			close(waitChain)
+			defer resp.Body.Close()
+
+			_, err = io.ReadAll(resp.Body)
+
+			if err != nil {
+				waitChain <- err
+				return
+			}
+
+			waitChain <- nil
 		}()
 
 		solveOpt.Exports = []buildkit.ExportEntry{
@@ -130,7 +141,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 			},
 		}
 	} else {
-		close(waitChain)
+		waitChain <- nil
 	}
 
 	_, err = builder.Solve(ctx, def, *solveOpt, createSolveChan(ctx))
@@ -139,7 +150,9 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		return "", err
 	}
 
-	<-waitChain
+	if <-waitChain != nil {
+		return "", err
+	}
 
 	return version, nil
 }
