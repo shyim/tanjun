@@ -1,3 +1,4 @@
+name: Integration
 on:
   push:
     branches:
@@ -19,6 +20,13 @@ jobs:
 
       - name: Build
         run: go install .
+
+      - name: Add tanjun to PATH
+        run: echo "::add-path::$(go env GOPATH)/bin"
+
+      - name: Setup
+        working-directory: examples/${{ matrix.example }}
+        run: tanjun setup
 
       - name: Deploy
         working-directory: examples/${{ matrix.example }}
