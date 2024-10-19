@@ -89,6 +89,9 @@
         "image": {
           "type": "string"
         },
+        "remote_build": {
+          "type": "boolean"
+        },
         "keep_versions": {
           "type": "integer"
         },

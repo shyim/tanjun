@@ -24,6 +24,12 @@ func llbFromProject(ctx context.Context, info system.Info) (string, *llb.Definit
 		return "", nil, err
 	}
 
+	architecture := info.Architecture
+
+	if architecture == "aarch64" {
+		architecture = "arm64"
+	}
+
 	caps := pb.Caps.CapSet(pb.Caps.All())
 
 	local := llb.Local("context", llb.ExcludePatterns(dockerIgnore))
@@ -33,7 +39,7 @@ func llbFromProject(ctx context.Context, info system.Info) (string, *llb.Definit
 		LLBCaps:      &caps,
 		TargetPlatform: &imageSpecsV1.Platform{
 			OS:           "linux",
-			Architecture: info.Architecture,
+			Architecture: architecture,
 		},
 		Config: dockerui.Config{
 			Labels:    configFile.Build.Labels,

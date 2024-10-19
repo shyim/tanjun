@@ -3,6 +3,7 @@ package build
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 
@@ -42,10 +43,14 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 
 	defer remoteClient.Close()
 
-	dockerClient, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if config.RemoteBuild {
+		dockerClient = remoteClient
+	} else {
+		dockerClient, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
-	if err != nil {
-		return "", err
+		if err != nil {
+			return "", err
+		}
 	}
 
 	ctx = context.WithValue(ctx, contextConfigField, config)
@@ -98,9 +103,54 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		return "", err
 	}
 
+	waitChain := make(chan error)
+
+	if config.RemoteBuild {
+		pr, pw := io.Pipe()
+
+		go func() {
+			resp, err := dockerClient.ImageLoad(ctx, pr, false)
+
+			if err != nil {
+				waitChain <- err
+				return
+			}
+
+			defer resp.Body.Close()
+
+			_, err = io.ReadAll(resp.Body)
+
+			if err != nil {
+				waitChain <- err
+				return
+			}
+
+			waitChain <- nil
+		}()
+
+		solveOpt.Exports = []buildkit.ExportEntry{
+			{
+				Type: buildkit.ExporterDocker,
+				Output: func(m map[string]string) (io.WriteCloser, error) {
+					return pw, nil
+				},
+				Attrs: map[string]string{
+					"name":                  fmt.Sprintf("%s:%s", config.Image, version),
+					"containerimage.config": containerConfig,
+				},
+			},
+		}
+	} else {
+		waitChain <- nil
+	}
+
 	_, err = builder.Solve(ctx, def, *solveOpt, createSolveChan(ctx))
 
 	if err != nil {
+		return "", err
+	}
+
+	if <-waitChain != nil {
 		return "", err
 	}
 

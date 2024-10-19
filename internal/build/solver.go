@@ -64,6 +64,17 @@ func getSolveConfiguration(ctx context.Context, containerConfig string) (string,
 		remoteClient: ctx.Value(contextRemoteClientField).(*client.Client),
 	}))
 
+	exports := []buildkit.ExportEntry{
+		{
+			Type: buildkit.ExporterImage,
+			Attrs: map[string]string{
+				"name":                  fmt.Sprintf("%s:%s", configFile.Image, version),
+				"push":                  "true",
+				"containerimage.config": containerConfig,
+			},
+		},
+	}
+
 	solveOpt := buildkit.SolveOpt{
 		Session: attachables,
 		LocalMounts: map[string]fsutil.FS{
@@ -72,16 +83,7 @@ func getSolveConfiguration(ctx context.Context, containerConfig string) (string,
 		},
 		CacheExports: cacheExports,
 		CacheImports: cacheExports,
-		Exports: []buildkit.ExportEntry{
-			{
-				Type: buildkit.ExporterImage,
-				Attrs: map[string]string{
-					"name":                  fmt.Sprintf("%s:%s", configFile.Image, version),
-					"push":                  "true",
-					"containerimage.config": containerConfig,
-				},
-			},
-		},
+		Exports:      exports,
 	}
 
 	return version, &solveOpt, nil

@@ -13,6 +13,7 @@ import (
 type ProjectConfig struct {
 	Name         string `yaml:"name" jsonschema:"required"`
 	Image        string `yaml:"image" jsonschema:"required"`
+	RemoteBuild  bool   `yaml:"remote_build,omitempty"`
 	KeepVersions int    `yaml:"keep_versions"`
 	Build        struct {
 		Labels               map[string]string `yaml:"labels,omitempty"`
