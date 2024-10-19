@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/charmbracelet/log"
 	"github.com/pterm/pterm"
 
 	"github.com/docker/docker/client"
@@ -110,7 +111,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 
 		go func() {
 			if _, err := dockerClient.ImageLoad(ctx, pr, false); err != nil {
-
+				log.Warnf("Failed to load image to remote daemon: %s", err)
 			}
 
 			close(waitChain)
