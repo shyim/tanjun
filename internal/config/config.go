@@ -13,9 +13,9 @@ import (
 type ProjectConfig struct {
 	Name         string `yaml:"name" jsonschema:"required"`
 	Image        string `yaml:"image" jsonschema:"required"`
-	RemoteBuild  bool   `yaml:"remote_build,omitempty"`
 	KeepVersions int    `yaml:"keep_versions"`
 	Build        struct {
+		RemoteBuild          bool              `yaml:"remote_build,omitempty"`
 		Labels               map[string]string `yaml:"labels,omitempty"`
 		BuildArgs            map[string]string `yaml:"args,omitempty"`
 		PassThroughSSHSocket bool              `yaml:"passthroughs_ssh_socket,omitempty"`

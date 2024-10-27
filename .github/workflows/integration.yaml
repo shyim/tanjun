@@ -28,11 +28,11 @@ jobs:
 
       - name: Setup
         working-directory: examples/${{ matrix.example }}
-        run: tanjun setup
+        run: tanjun setup --verbose
 
       - name: Deploy
         working-directory: examples/${{ matrix.example }}
-        run: tanjun deploy
+        run: tanjun deploy --verbose
 
       - name: Test
         working-directory: examples/${{ matrix.example }}

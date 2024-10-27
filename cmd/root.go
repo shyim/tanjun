@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"context"
-	"log"
-	"os"
-
+	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var configFile = ".tanjun.yml"
 var projectRoot = ""
+var verboseMode = false
 var version = "dev"
 
 var rootCmd = &cobra.Command{
@@ -20,7 +21,8 @@ var rootCmd = &cobra.Command{
 
 func Execute(ctx context.Context) {
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		log.Fatalln(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
 
@@ -29,12 +31,18 @@ func init() {
 	rootCmd.SilenceUsage = true
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", configFile, "Path to the config file")
 	rootCmd.PersistentFlags().StringVar(&projectRoot, "project-root", "", "Path to the project root, otherwise it will use the current directory")
+	rootCmd.PersistentFlags().BoolVar(&verboseMode, "verbose", false, "Show debug info")
 
 	cobra.OnInitialize(func() {
 		if projectRoot != "" {
 			if err := os.Chdir(projectRoot); err != nil {
-				log.Fatalln(err)
+				fmt.Println(err)
+				os.Exit(1)
 			}
+		}
+
+		if verboseMode {
+			log.SetLevel(log.DebugLevel)
 		}
 	})
 }

@@ -3,6 +3,7 @@ package build
 import (
 	"context"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"io"
 	"os"
 	"os/signal"
@@ -41,16 +42,20 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		return "", err
 	}
 
+	log.Debugf("Connected to remote docker client: %s (%s)", info.ServerVersion, info.Architecture)
+
 	defer remoteClient.Close()
 
-	if config.RemoteBuild {
+	if config.Build.RemoteBuild {
 		dockerClient = remoteClient
+		log.Debugf("Using remote builder to build docker image")
 	} else {
 		dockerClient, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
 		if err != nil {
 			return "", err
 		}
+		log.Debugf("Connected to local docker daemon")
 	}
 
 	ctx = context.WithValue(ctx, contextConfigField, config)
@@ -82,12 +87,16 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 
 	defer stopBuildkitd(dockerClient, ctx, containerId)
 
+	log.Debugf("Building LLB from docker image")
+
 	containerConfig, def, err := llbFromProject(ctx, info)
 	if err != nil {
 		return "", err
 	}
 
 	activeDockerClient = dockerClient
+
+	log.Debugf("Connecting to buildkit running as container id %s", containerId)
 
 	builder, err := buildkit.New(ctx, fmt.Sprintf("tanjun://%s", containerId))
 
@@ -97,15 +106,19 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 
 	defer builder.Close()
 
+	log.Debugf("Building solver")
+
 	version, solveOpt, err := getSolveConfiguration(ctx, containerConfig)
 
 	if err != nil {
 		return "", err
 	}
 
+	log.Debugf("Next version will be %s", version)
+
 	waitChain := make(chan error)
 
-	if config.RemoteBuild {
+	if config.Build.RemoteBuild {
 		pr, pw := io.Pipe()
 
 		go func() {
@@ -144,10 +157,16 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		waitChain <- nil
 	}
 
+	log.Debugf("Starting buildkit build process")
+
 	_, err = builder.Solve(ctx, def, *solveOpt, createSolveChan(ctx))
 
 	if err != nil {
 		return "", err
+	}
+
+	if config.Build.RemoteBuild {
+		log.Debugf("Loading image to local docker registry")
 	}
 
 	if <-waitChain != nil {

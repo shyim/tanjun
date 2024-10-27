@@ -1,7 +1,8 @@
 # yaml-language-server: $schema=../../schema.json
 name: bun
 image: ghcr.io/shyim/bun
-remote_build: true
+build:
+    remote_build: true
 server:
     address: 127.0.0.1
 proxy:

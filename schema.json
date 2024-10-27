@@ -89,14 +89,14 @@
         "image": {
           "type": "string"
         },
-        "remote_build": {
-          "type": "boolean"
-        },
         "keep_versions": {
           "type": "integer"
         },
         "build": {
           "properties": {
+            "remote_build": {
+              "type": "boolean"
+            },
             "labels": {
               "additionalProperties": {
                 "type": "string"
