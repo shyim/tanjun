@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -21,27 +22,39 @@ const tanjunKVVolumeName = "tanjun-kv"
 const tanjunKVImage = "ghcr.io/shyim/tanjun/kv-store:v1"
 
 func ConfigureServer(ctx context.Context, client *client.Client) error {
-	if err := createVolume(ctx, client, kamalVolumeName); err != nil {
+	var sideGroup errgroup.Group
+
+	sideGroup.Go(func() error {
+		return createVolume(ctx, client, kamalVolumeName)
+	})
+
+	sideGroup.Go(func() error {
+		return createVolume(ctx, client, tanjunKVVolumeName)
+	})
+
+	sideGroup.Go(func() error {
+		return createPublicNetwork(ctx, client)
+	})
+
+	if err := sideGroup.Wait(); err != nil {
 		return err
 	}
 
-	if err := createVolume(ctx, client, tanjunKVVolumeName); err != nil {
-		return err
-	}
+	var containerGroup errgroup.Group
 
-	if err := createPublicNetwork(ctx, client); err != nil {
-		return err
-	}
+	containerGroup.Go(func() error {
+		return createKamalContainer(ctx, client)
+	})
 
-	if err := createKamalContainer(ctx, client); err != nil {
-		return err
-	}
+	containerGroup.Go(func() error {
+		return createKeyValueContainer(ctx, client)
+	})
 
-	if err := createKeyValueContainer(ctx, client); err != nil {
-		return err
-	}
+	containerGroup.Go(func() error {
+		return createSysctlContainer(ctx, client)
+	})
 
-	return createSysctlContainer(ctx, client)
+	return containerGroup.Wait()
 }
 
 func createKeyValueContainer(ctx context.Context, c *client.Client) error {
