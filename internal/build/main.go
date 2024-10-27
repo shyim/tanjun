@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/charmbracelet/log"
+	"github.com/pterm/pterm"
 	"io"
 	"os"
 	"os/signal"
-
-	"github.com/pterm/pterm"
 
 	"github.com/docker/docker/client"
 	buildkit "github.com/moby/buildkit/client"
@@ -105,6 +104,14 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 	}
 
 	defer builder.Close()
+
+	buildkitInfo, err := builder.Info(ctx)
+
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf("Buildkit connected version: %s", buildkitInfo.BuildkitVersion)
 
 	log.Debugf("Building solver")
 

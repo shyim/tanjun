@@ -3,6 +3,7 @@ package build
 import (
 	"context"
 	"github.com/charmbracelet/log"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/shyim/tanjun/internal/docker"
@@ -30,16 +31,33 @@ func startBuildkitd(ctx context.Context, dockerClient *client.Client) (string, e
 
 	c, err := dockerClient.ContainerCreate(ctx, &container.Config{
 		Image: "moby/buildkit:v0.16.0",
+		Healthcheck: &container.HealthConfig{
+			Test:          []string{"CMD", "buildctl", "debug", "workers"},
+			StartInterval: time.Millisecond * 100,
+			Interval:      time.Millisecond * 100,
+		},
 	}, &container.HostConfig{Privileged: true}, nil, nil, "")
 
 	if err != nil {
 		return "", err
 	}
 
-	time.Sleep(2 * time.Second)
-
 	if err := dockerClient.ContainerStart(ctx, c.ID, container.StartOptions{}); err != nil {
 		return "", err
+	}
+
+	for {
+		inspect, err := dockerClient.ContainerInspect(ctx, c.ID)
+
+		if err != nil {
+			return "", err
+		}
+
+		if inspect.State.Health.Status == types.Healthy {
+			break
+		}
+
+		time.Sleep(time.Millisecond * 50)
 	}
 
 	return c.ID, nil

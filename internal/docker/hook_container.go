@@ -76,8 +76,18 @@ func runHookInContainer(ctx context.Context, client *client.Client, deployCfg De
 		return err
 	}
 
+	inspectedContainer, err := client.ContainerInspect(ctx, hookContainer.ID)
+
+	if err != nil {
+		return err
+	}
+
 	if err := client.ContainerRemove(ctx, hookContainer.ID, container.RemoveOptions{Force: true}); err != nil {
 		return err
+	}
+
+	if inspectedContainer.State.ExitCode != 0 {
+		return fmt.Errorf("hook failed with status code: %d", inspectedContainer.State.ExitCode)
 	}
 
 	return nil

@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=../../schema.json
+server:
+  address: 127.0.0.1
+name: shopware
+image: tanjun/shopware
+build:
+  remote_build: true
+proxy:
+  host: localhost
+  healthcheck:
+    path: /admin
+app:
+  env:
+    APP_URL:
+      expr: '"http://" + config.Proxy.Host'
+    TRUSTED_PROXIES:
+      value: REMOTE_ADDR
+    DATABASE_URL:
+      expr: 'service.database.url'
+  initial_secrets:
+    APP_SECRET:
+      expr: 'randomString(32)'
+  mounts:
+    jwt:
+      path: /var/www/html/config/jwt
+    files:
+      path: /var/www/html/files
+    bundles:
+      path: /var/www/html/public/bundles
+    theme:
+      path: /var/www/html/public/theme
+    media:
+      path: /var/www/html/public/media
+    thumbnail:
+      path: /var/www/html/public/thumbnail
+    sitemap:
+      path: /var/www/html/public/sitemap
+  workers:
+    worker:
+      command: 'php bin/console messenger:consume async --time-limit=3600'
+  cronjobs:
+    - schedule: '@every 5m'
+      command: 'php bin/console scheduled-task:run --no-wait'
+  hooks:
+    deploy: |
+      ./vendor/bin/shopware-deployment-helper run --skip-theme-compile
+    post_deploy: |
+      ./bin/console theme:compile --active-only
+
+services:
+  database:
+    type: mysql:8.0
+    settings:
+      sql_mode: 'error_for_division_by_zero'
+  cache:
+    type: valkey:8.0
