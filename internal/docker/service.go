@@ -80,6 +80,7 @@ func startServices(ctx context.Context, client *client.Client, deployCfg DeployC
 
 	options := container.ListOptions{
 		Filters: filters.NewArgs(),
+		All:     true,
 	}
 
 	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", deployCfg.Name))

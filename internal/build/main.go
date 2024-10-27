@@ -106,6 +106,14 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 
 	defer builder.Close()
 
+	buildkitInfo, err := builder.Info(ctx)
+
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf("Buildkit connected version: %s", buildkitInfo.BuildkitVersion)
+
 	log.Debugf("Building solver")
 
 	version, solveOpt, err := getSolveConfiguration(ctx, containerConfig)

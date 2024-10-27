@@ -3,10 +3,8 @@ package docker
 import (
 	"context"
 	"fmt"
-	"math/rand/v2"
-	"runtime/pprof"
-
 	"github.com/pterm/pterm"
+	"math/rand/v2"
 
 	"github.com/charmbracelet/log"
 
@@ -57,6 +55,7 @@ func (c DeployConfiguration) GetEnvironmentVariables() []string {
 func getEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]types.Container, error) {
 	options := container.ListOptions{
 		Filters: filters.NewArgs(),
+		All:     true,
 	}
 
 	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", projectName))
@@ -68,6 +67,7 @@ func getEnvironmentContainers(ctx context.Context, client *client.Client, projec
 func getWorkerEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]types.Container, error) {
 	options := container.ListOptions{
 		Filters: filters.NewArgs(),
+		All:     true,
 	}
 
 	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", projectName))
@@ -79,6 +79,7 @@ func getWorkerEnvironmentContainers(ctx context.Context, client *client.Client, 
 func getCronjobEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]types.Container, error) {
 	options := container.ListOptions{
 		Filters: filters.NewArgs(),
+		All:     true,
 	}
 
 	options.Filters.Add("label", fmt.Sprintf("tanjun.project=%s", projectName))
@@ -221,14 +222,6 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 		return err
 	}
 
-	if err := startWorkers(ctx, client, deployCfg); err != nil {
-		return err
-	}
-
-	if err := startCronjobs(ctx, client, deployCfg); err != nil {
-		return err
-	}
-
 	spinnerInfo, err := pterm.DefaultSpinner.Start("Routing new traffic to new container")
 
 	if err != nil {
@@ -279,16 +272,16 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 	if err := configureKamalService(ctx, client, kamalCmd); err != nil {
 		spinnerInfo.Fail(err)
 
-		// If we fail to configure kamal, we should stop the container and remove it
-		if restoreErr := client.ContainerKill(ctx, resp.ID, "SIGKILL"); restoreErr != nil {
-			return fmt.Errorf("kamal configure failed: %w and could not stop the new container: %s", err, restoreErr)
-		}
-
-		if restoreErr := client.ContainerRemove(ctx, resp.ID, container.RemoveOptions{}); restoreErr != nil {
-			return fmt.Errorf("kamal configure failed: %w and could not remove the new container: %s", err, restoreErr)
-		}
-
 		if len(removalContainers) > 0 {
+			// If we fail to configure kamal, we should stop the container and remove it
+			if restoreErr := client.ContainerKill(ctx, resp.ID, "SIGKILL"); restoreErr != nil {
+				return fmt.Errorf("kamal configure failed: %w and could not stop the new container: %s", err, restoreErr)
+			}
+
+			if restoreErr := client.ContainerRemove(ctx, resp.ID, container.RemoveOptions{}); restoreErr != nil {
+				return fmt.Errorf("kamal configure failed: %w and could not remove the new container: %s", err, restoreErr)
+			}
+
 			if restoreErr := startContainers(ctx, client, removalContainers); restoreErr != nil {
 				return fmt.Errorf("kamal configure failed: %w and could not start the old workers / cronjobs: %s", err, restoreErr)
 			}
@@ -300,6 +293,14 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 	spinnerInfo.Success("Routing new traffic to new container successful")
 
 	if err := removeContainers(ctx, client, append(removalContainers, beforeCronjobs...)); err != nil {
+		return err
+	}
+
+	if err := startWorkers(ctx, client, deployCfg); err != nil {
+		return err
+	}
+
+	if err := startCronjobs(ctx, client, deployCfg); err != nil {
 		return err
 	}
 
@@ -315,8 +316,6 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 	if len(beforeContainers) > 0 {
 		log.Infof("You can rollback to the previous version with tanjun deploy --rollback")
 	}
-
-	pprof.StopCPUProfile()
 
 	return VersionDrain(ctx, client, deployCfg.ProjectConfig)
 }

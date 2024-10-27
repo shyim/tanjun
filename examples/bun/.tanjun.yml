@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../schema.json
 name: bun
-image: ghcr.io/shyim/bun
+image: tanjun/bun
 build:
     remote_build: true
 server:

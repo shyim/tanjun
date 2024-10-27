@@ -16,6 +16,7 @@ jobs:
       matrix:
         example:
           - bun
+          - shopware6
     steps:
       - uses: actions/checkout@v4
 

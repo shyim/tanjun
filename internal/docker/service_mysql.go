@@ -82,7 +82,7 @@ func (m MySQLService) AttachInfo(serviceName string, serviceCfg config.ProjectSe
 		"username": "root",
 		"password": "",
 		"database": "database",
-		"url":      fmt.Sprintf("mysql://%s:3306", serviceName),
+		"url":      fmt.Sprintf("mysql://root@%s:3306/database", serviceName),
 		"go":       fmt.Sprintf("root:@tcp(%s:3306)/database", serviceName),
 	}
 }
