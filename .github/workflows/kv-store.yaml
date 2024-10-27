@@ -1,0 +1,39 @@
+name: Build KV-Store Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'kv-store/**'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Login to GitHub Docker Registry
+          uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@v3
+
+        - name: Setup Docker Buildx
+          uses: docker/setup-buildx-action@v3
+
+        - name: Build and push
+          uses: docker/bake-action@v5
+          with:
+            targets: kv-store
+            push: true

@@ -3,14 +3,15 @@ package docker
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	kvstore "github.com/shyim/tanjun/kv-store"
+	"io"
 )
 
 type KvClient struct {
@@ -18,38 +19,98 @@ type KvClient struct {
 	pr   *io.PipeReader
 }
 
-func (c KvClient) Get(key string) string {
-	if _, err := c.resp.Conn.Write([]byte(fmt.Sprintf("GET %s\n", key))); err != nil {
-		return ""
+func (c KvClient) Get(key string) (string, error) {
+	payload := kvstore.KVInput{Operation: "get", Key: key}
+
+	encoded, err := json.Marshal(payload)
+
+	if err != nil {
+		return "", err
+	}
+
+	encoded = append(encoded, []byte("\n")...)
+
+	if _, err := c.resp.Conn.Write(encoded); err != nil {
+		return "", err
 	}
 
 	scanner := bufio.NewScanner(c.pr)
 
 	scanner.Scan()
 
-	return scanner.Text()
+	var res kvstore.KVResponse
+
+	if err := json.Unmarshal(scanner.Bytes(), &res); err != nil {
+		return "", err
+	}
+
+	if res.ErrorMessage != "" {
+		return "", fmt.Errorf("%s", res.ErrorMessage)
+	}
+
+	return res.Value, nil
 }
 
-func (c KvClient) Set(key string, value string) bool {
-	escapedValue := strings.ReplaceAll(value, `\`, `\\`)
-	escapedValue = strings.ReplaceAll(escapedValue, `'`, `\'`)
-	if _, err := c.resp.Conn.Write([]byte(fmt.Sprintf("SET '%s' '%s'\n", key, escapedValue))); err != nil {
-		return false
+func (c KvClient) Delete(key string) error {
+	payload := kvstore.KVInput{Operation: "del", Key: key}
+
+	encoded, err := json.Marshal(payload)
+
+	if err != nil {
+		return err
+	}
+
+	encoded = append(encoded, []byte("\n")...)
+
+	if _, err := c.resp.Conn.Write(encoded); err != nil {
+		return err
 	}
 
 	scanner := bufio.NewScanner(c.pr)
 	scanner.Scan()
 
-	return scanner.Text() == "OK"
+	var res kvstore.KVResponse
+
+	if err := json.Unmarshal(scanner.Bytes(), &res); err != nil {
+		return err
+	}
+
+	if res.ErrorMessage != "" {
+		return fmt.Errorf("%s", res.ErrorMessage)
+	}
+
+	return nil
 }
 
-func (c KvClient) Delete(key string) bool {
-	_, _ = c.resp.Conn.Write([]byte(fmt.Sprintf("DELETE '%s'\n", key)))
+func (c KvClient) Set(key string, value string) error {
+	payload := kvstore.KVInput{Operation: "set", Key: key, Value: value}
+
+	encoded, err := json.Marshal(payload)
+
+	if err != nil {
+		return err
+	}
+
+	encoded = append(encoded, []byte("\n")...)
+
+	if _, err := c.resp.Conn.Write(encoded); err != nil {
+		return err
+	}
 
 	scanner := bufio.NewScanner(c.pr)
 	scanner.Scan()
 
-	return scanner.Text() == "OK"
+	var res kvstore.KVResponse
+
+	if err := json.Unmarshal(scanner.Bytes(), &res); err != nil {
+		return err
+	}
+
+	if res.ErrorMessage != "" {
+		return fmt.Errorf("%s", res.ErrorMessage)
+	}
+
+	return nil
 }
 
 func (c KvClient) Close() {
@@ -79,8 +140,7 @@ func CreateKVConnection(ctx context.Context, client *client.Client) (*KvClient, 
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
-		Cmd:          []string{"valkey-cli"},
-		Env:          []string{"TERM=dumb", "NO_COLOR=1"},
+		Cmd:          []string{"/kv-store"},
 	})
 
 	if err != nil {

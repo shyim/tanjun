@@ -9,7 +9,11 @@ import (
 func ListProjectSecrets(kv *KvClient, name string) (map[string]string, error) {
 	cfg := DeployConfiguration{Name: slug.Make(name)}
 
-	secret := kv.Get(cfg.ContainerPrefix() + "_secrets")
+	secret, err := kv.Get(cfg.ContainerPrefix() + "_secrets")
+
+	if err != nil {
+		return nil, err
+	}
 
 	if secret == "" {
 		return make(map[string]string), nil
@@ -33,8 +37,8 @@ func SetProjectSecrets(kv *KvClient, name string, secrets map[string]string) err
 		return err
 	}
 
-	if !kv.Set(cfg.ContainerPrefix()+"_secrets", string(secret)) {
-		return fmt.Errorf("could not set secrets")
+	if err := kv.Set(cfg.ContainerPrefix()+"_secrets", string(secret)); err != nil {
+		return fmt.Errorf("could not set secrets: %s", err)
 	}
 
 	return nil
