@@ -31,7 +31,9 @@ func (c KvClient) Get(key string) string {
 }
 
 func (c KvClient) Set(key string, value string) bool {
-	if _, err := c.resp.Conn.Write([]byte(fmt.Sprintf("SET '%s' '%s'\n", key, value))); err != nil {
+	escapedValue := strings.ReplaceAll(value, `\`, `\\`)
+	escapedValue = strings.ReplaceAll(escapedValue, `'`, `\'`)
+	if _, err := c.resp.Conn.Write([]byte(fmt.Sprintf("SET '%s' '%s'\n", key, escapedValue))); err != nil {
 		return false
 	}
 
