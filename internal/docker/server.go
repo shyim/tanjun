@@ -18,6 +18,7 @@ const kamalVolumeName = "tanjun-kamal-certs"
 const kamalNetworkName = "tanjun-public"
 const tanjunKVContainerName = "tanjun-kv"
 const tanjunKVVolumeName = "tanjun-kv"
+const tanjunKVImage = "ghcr.io/shyim/tanjun/kv-store:v1"
 
 func ConfigureServer(ctx context.Context, client *client.Client) error {
 	if err := createVolume(ctx, client, kamalVolumeName); err != nil {
@@ -44,7 +45,7 @@ func ConfigureServer(ctx context.Context, client *client.Client) error {
 }
 
 func createKeyValueContainer(ctx context.Context, c *client.Client) error {
-	if err := PullImageIfNotThere(ctx, c, "valkey/valkey:alpine"); err != nil {
+	if err := PullImageIfNotThere(ctx, c, tanjunKVImage); err != nil {
 		return err
 	}
 
@@ -58,11 +59,18 @@ func createKeyValueContainer(ctx context.Context, c *client.Client) error {
 	}
 
 	if len(containers) == 1 {
-		return nil
+		if containers[0].Image == tanjunKVImage {
+			return nil
+		}
+
+		if err := removeContainers(ctx, c, containers); err != nil {
+			return err
+		}
 	}
 
 	cfg := &container.Config{
-		Image: "valkey/valkey:alpine",
+		Image: tanjunKVImage,
+		Tty:   true,
 		Labels: map[string]string{
 			"tanjun":                              "true",
 			"com.docker.compose.project":          "tanjun",
