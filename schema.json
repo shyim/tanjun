@@ -3,11 +3,212 @@
   "$id": "https://github.com/shyim/tanjun/internal/config/project-config",
   "$ref": "#/$defs/ProjectConfig",
   "$defs": {
+    "Config": {
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "bun"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "packages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Allows installation of additional packages"
+                  },
+                  "env": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Default environment variables"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "Application Listing Port",
+                    "default": "3000"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "go"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "packages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Allows installation of additional packages"
+                  },
+                  "env": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Default environment variables"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "Application Listing Port",
+                    "default": "3000"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "node"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "packages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Allows installation of additional packages"
+                  },
+                  "env": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Default environment variables"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "Application Listing Port",
+                    "default": "3000"
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": [
+                      "20",
+                      "22",
+                      "23"
+                    ],
+                    "description": "Node version to use, when empty automatically detected by package.json"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "php"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "packages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Allows installation of additional packages"
+                  },
+                  "env": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Default environment variables"
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": [
+                      "8.1",
+                      "8.2",
+                      "8.3"
+                    ],
+                    "description": "PHP Version (default detect from composer.json)"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "nginx",
+                      "caddy",
+                      "frankenphp"
+                    ],
+                    "description": "Server Variant",
+                    "default": "nginx"
+                  },
+                  "ini": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object",
+                    "description": "PHP Ini configurations"
+                  },
+                  "extensions": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Additional PHP extensions to install"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "bun",
+            "go",
+            "node",
+            "php"
+          ]
+        }
+      },
+      "type": "object",
+      "required": [
+        "type"
+      ]
+    },
     "ProjectApp": {
       "properties": {
-        "dockerfile": {
-          "type": "string"
-        },
         "env": {
           "additionalProperties": {
             "$ref": "#/$defs/ProjectEnvironment"
@@ -94,6 +295,12 @@
         },
         "build": {
           "properties": {
+            "build_pack": {
+              "$ref": "#/$defs/Config"
+            },
+            "dockerfile": {
+              "type": "string"
+            },
             "remote_build": {
               "type": "boolean"
             },

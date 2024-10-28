@@ -16,7 +16,10 @@ jobs:
       matrix:
         example:
           - bun
+          - go
+          - node
           - shopware6
+          - symfony
     steps:
       - uses: actions/checkout@v4
 

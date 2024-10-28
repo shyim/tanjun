@@ -15,18 +15,23 @@ import (
 func getDockerFile(root string, config *config.ProjectConfig) ([]byte, []string, error) {
 	var dockerFile []byte
 	var dockerIgnore []string
+	var err error
 
-	if _, err := os.Stat(path.Join(root, config.App.Dockerfile)); os.IsNotExist(err) {
-		build, err := buildpack.GenerateImageFile(root)
+	if config.Build.BuildPack != nil {
+		build, err := buildpack.GenerateImageFile(root, config.Build.BuildPack)
 
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to generate Dockerfile: %w", err)
 		}
 
 		dockerFile = []byte(build.Dockerfile)
-		dockerIgnore = build.Dockerignore
+		dockerIgnore = build.DockerIgnore
 	} else {
-		dockerFile, err = os.ReadFile(path.Join(root, config.App.Dockerfile))
+		if _, err := os.Stat(path.Join(root, config.Build.Dockerfile)); os.IsNotExist(err) {
+			return nil, nil, fmt.Errorf("cannot find %s, did you forgot to create it or configured wrong path", config.Build.Dockerfile)
+		}
+
+		dockerFile, err = os.ReadFile(path.Join(root, config.Build.Dockerfile))
 
 		if err != nil {
 			return nil, nil, err
