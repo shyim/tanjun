@@ -3,12 +3,15 @@ package config
 import (
 	"fmt"
 	"os"
+	"regexp"
 
 	"github.com/invopop/jsonschema"
 
 	"github.com/robfig/cron/v3"
 	"gopkg.in/yaml.v3"
 )
+
+var validHostName = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 
 type ProjectConfig struct {
 	Name         string `yaml:"name" jsonschema:"required"`
@@ -194,6 +197,10 @@ func validateConfig(projectConfig *ProjectConfig) error {
 
 	if projectConfig.Proxy.Host == "" {
 		return fmt.Errorf("missing proxy host")
+	}
+
+	if !validHostName.MatchString(projectConfig.Name) {
+		return fmt.Errorf("the project name cannot contain special symbols as this needs to be resolable with DNS")
 	}
 
 	return nil
