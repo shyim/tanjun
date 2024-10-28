@@ -76,7 +76,8 @@ func findPortMapping(cfg DeployConfiguration, container types.ContainerJSON) str
 			continue
 		}
 
-		if p.Port() != "9000" {
+		// 9000 = FPM, 2019 = Caddy management Port, 443 = HTTPs, we can talk only to http
+		if p.Port() != "9000" && p.Port() != "2019" && p.Port() != "443" {
 			return p.Port()
 		}
 	}

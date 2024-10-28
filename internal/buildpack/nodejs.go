@@ -2,97 +2,44 @@ package buildpack
 
 import (
 	"fmt"
-	"log"
+	"github.com/invopop/jsonschema"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 	"os"
 	"path"
 	"strings"
-
-	"github.com/shyim/go-version"
 )
 
-type PackageJSON struct {
-	Main            string            `json:"main"`
-	PackageManager  string            `json:"packageManager"`
-	Engines         map[string]string `json:"engines"`
-	Scripts         map[string]string `json:"scripts"`
-	Dependencies    map[string]string `json:"dependencies"`
-	DevDependencies map[string]string `json:"devDependencies"`
-	Tanjun          struct {
-		Runtime string `json:"runtime"`
-	} `json:"tanjun"`
+type Node struct {
 }
 
-func (j PackageJSON) HasDependencies() bool {
-	return len(j.Dependencies) > 0 || len(j.DevDependencies) > 0
-}
-
-func detectNodeVersion(packageJson PackageJSON) string {
-	nodeConstraint, ok := packageJson.Engines["node"]
-
-	if !ok {
-		return "22"
-	}
-
-	constraint, err := version.NewConstraint(nodeConstraint)
-
-	if err != nil {
-		log.Printf("Error parsing node version constraint: %s", err)
-		return "22"
-	}
-
-	if constraint.Check(version.Must(version.NewVersion("22"))) {
-		return "22"
-	}
-
-	if constraint.Check(version.Must(version.NewVersion("20"))) {
-		return "20"
-	}
-
-	return "18"
-}
-
-func detectNodeRuntime(packageJson PackageJSON) string {
-	if packageJson.Tanjun.Runtime == "bun" {
-		return "bun"
-	}
-
-	if _, ok := packageJson.DevDependencies["@types/bun"]; ok {
-		return "bun"
-	}
-
+func (n Node) Name() string {
 	return "node"
 }
 
-func generateByNodeJS(project string) (*GeneratedImageResult, error) {
+func (n Node) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 	var packageJSON PackageJSON
 
-	if err := readJSONFile(path.Join(project, "package.json"), &packageJSON); err != nil {
+	if err := readJSONFile(path.Join(root, "package.json"), &packageJSON); err != nil {
 		return nil, fmt.Errorf("failed to read package.json: %w", err)
 	}
 
-	nodeVersion := detectNodeVersion(packageJSON)
-	runtime := detectNodeRuntime(packageJSON)
-
 	result := &GeneratedImageResult{}
 
-	packageManager := detectNodePackageManager(project)
+	if cfg.Settings["version"].(string) == "" {
+		cfg.Settings["version"] = detectNodeVersion(packageJSON)
+	}
+
+	nodePackage := fmt.Sprintf("nodejs-%s npm", cfg.Settings["version"])
+
+	packageManager := detectNodePackageManager(root)
 
 	result.AddIgnoreLine("node_modules")
 
 	result.AddLine("FROM ghcr.io/shyim/wolfi-php/base:latest as builder")
 	result.AddLine("ENV CI=true NODE_ENV=production NPM_CONFIG_PRODUCTION=false")
 
-	if runtime == "node" {
-		result.Add("RUN apk add --no-cache nodejs-%s npm", nodeVersion)
-	} else if runtime == "bun" {
-		packageManager = "bun"
-	}
-
-	if packageManager == "bun" && runtime != "bun" {
-		result.Add(" bun-bin")
-	} else if runtime == "bun" {
-		result.AddLine("RUN apk add --no-cache bun-bin")
-	}
+	addPackagesFromSettings(result, cfg, nodePackage)
+	addEnvFromSettings(result, cfg)
 
 	result.NewLine()
 
@@ -127,21 +74,76 @@ func generateByNodeJS(project string) (*GeneratedImageResult, error) {
 	result.AddLine("ENV NODE_ENV=production")
 	result.AddLine("WORKDIR /app")
 
-	if runtime == "node" {
-		result.AddLine("RUN apk add --no-cache nodejs-%s", nodeVersion)
-	} else {
-		result.AddLine("RUN apk add --no-cache bun-bin")
-	}
+	addPackagesFromSettings(result, cfg, nodePackage)
+	addEnvFromSettings(result, cfg)
 
 	result.AddLine("COPY --from=builder /app .")
 
-	result.AddLine("EXPOSE 3000")
+	result.AddLine("EXPOSE %s", cfg.Settings["port"])
 
-	if err := nodeJSAddStartupCommand(project, runtime, result, packageJSON); err != nil {
+	if err := nodeJSAddStartupCommand(root, result, packageJSON); err != nil {
 		return nil, err
 	}
 
 	return result, nil
+}
+
+func (n Node) Schema() *jsonschema.Schema {
+	properties := orderedmap.New[string, *jsonschema.Schema]()
+
+	properties.Set("packages", &jsonschema.Schema{
+		Type:        "array",
+		Items:       &jsonschema.Schema{Type: "string"},
+		Description: "Allows installation of additional packages",
+	})
+
+	properties.Set("env", &jsonschema.Schema{
+		Type:        "object",
+		Description: "Default environment variables",
+		AdditionalProperties: &jsonschema.Schema{
+			Type: "string",
+		},
+	})
+
+	properties.Set("port", &jsonschema.Schema{
+		Type:        "integer",
+		Default:     "3000",
+		Description: "Application Listing Port",
+	})
+
+	properties.Set("version", &jsonschema.Schema{
+		Type:        "string",
+		Enum:        []any{"20", "22", "23"},
+		Description: "Node version to use, when empty automatically detected by package.json",
+	})
+
+	return &jsonschema.Schema{
+		Type:       "object",
+		Properties: properties,
+	}
+}
+
+func (n Node) Default() ConfigSettings {
+	return ConfigSettings{
+		"port":     "3000",
+		"packages": []any{},
+		"env":      make(ConfigSettings),
+		"version":  "",
+	}
+}
+
+func (n Node) Supports(root string) bool {
+	var packageJSON PackageJSON
+
+	if err := readJSONFile(path.Join(root, "package.json"), &packageJSON); err != nil {
+		return false
+	}
+
+	if _, ok := packageJSON.DevDependencies["@types/bun"]; ok {
+		return false
+	}
+
+	return true
 }
 
 func detectNodePackageManager(project string) string {
@@ -160,13 +162,9 @@ func detectNodePackageManager(project string) string {
 	return "npm"
 }
 
-func nodeJSAddStartupCommand(project string, runtime string, result *GeneratedImageResult, packageJSON PackageJSON) error {
+func nodeJSAddStartupCommand(project string, result *GeneratedImageResult, packageJSON PackageJSON) error {
 	if _, ok := packageJSON.Scripts["start"]; ok {
-		if runtime == "node" {
-			result.AddLine("CMD npm run start")
-		} else {
-			result.AddLine("CMD bun run --bun start")
-		}
+		result.AddLine("CMD npm run start")
 
 		return nil
 	}
@@ -180,14 +178,10 @@ func nodeJSAddStartupCommand(project string, runtime string, result *GeneratedIm
 
 	for _, file := range possibleFiles {
 		if _, err := os.Stat(path.Join(project, file)); err == nil {
-			if runtime == "node" {
-				if strings.HasSuffix(file, ".ts") {
-					result.AddLine("CMD node --experimental-strip-types %s", file)
-				} else {
-					result.AddLine("CMD node %s", file)
-				}
+			if strings.HasSuffix(file, ".ts") {
+				result.AddLine("CMD node --experimental-strip-types %s", file)
 			} else {
-				result.AddLine("CMD bun %s", file)
+				result.AddLine("CMD node %s", file)
 			}
 
 			return nil
@@ -195,4 +189,8 @@ func nodeJSAddStartupCommand(project string, runtime string, result *GeneratedIm
 	}
 
 	return fmt.Errorf("could not detect how to start the application: provide a start script, a main file in package.json or an index.js file in the project root")
+}
+
+func init() {
+	RegisterLanguage(Node{})
 }

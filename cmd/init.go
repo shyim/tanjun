@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/docker/docker/pkg/namesgenerator"
 	"github.com/gosimple/slug"
+	"github.com/shyim/tanjun/internal/buildpack"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -25,7 +26,6 @@ var initCmd = &cobra.Command{
 		cfg := config.ProjectConfig{}
 		cfg.FillDefaults()
 
-		cfg.App.Dockerfile = ""
 		namePlaceHolder := namesgenerator.GetRandomName(0)
 
 		sshPort := "22"
@@ -94,6 +94,20 @@ var initCmd = &cobra.Command{
 		}
 
 		cfg.Server.Port, _ = strconv.Atoi(sshPort)
+
+		currentDir, _ := os.Getwd()
+
+		language, err := buildpack.DetectProjectType(currentDir)
+
+		if err == nil {
+			cfg.Build.BuildPack = &buildpack.Config{
+				Type: language,
+			}
+			log.Infof("Detected project uses %s and trying to build automatically the Dockerfile for you. Specify a Dockerfile in your config to disable this", language)
+		} else {
+			log.Infof("Buildpack cannot generate a Dockerfile automatically. Create a Dockerfile for your application container before you can deploy.")
+			cfg.Build.Dockerfile = "Dockerfile"
+		}
 
 		bytes, err := yaml.Marshal(cfg)
 

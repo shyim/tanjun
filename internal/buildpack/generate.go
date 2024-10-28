@@ -2,13 +2,11 @@ package buildpack
 
 import (
 	"fmt"
-	"os"
-	"path"
 )
 
 type GeneratedImageResult struct {
 	Dockerfile   string
-	Dockerignore []string
+	DockerIgnore []string
 }
 
 func (r *GeneratedImageResult) Add(text string, args ...any) {
@@ -24,21 +22,21 @@ func (r *GeneratedImageResult) AddLine(line string, args ...any) {
 }
 
 func (r *GeneratedImageResult) AddIgnoreLine(line string) {
-	r.Dockerignore = append(r.Dockerignore, line)
+	r.DockerIgnore = append(r.DockerIgnore, line)
 }
 
-func GenerateImageFile(project string) (*GeneratedImageResult, error) {
-	if _, err := os.Stat(path.Join(project, "package.json")); err == nil {
-		return generateByNodeJS(project)
+func GenerateImageFile(root string, cfg *Config) (*GeneratedImageResult, error) {
+	for _, lang := range supportedLanguages {
+		if lang.Name() == cfg.Type {
+			for key, value := range lang.Default() {
+				if _, ok := cfg.Settings[key]; !ok {
+					cfg.Settings[key] = value
+				}
+			}
+
+			return lang.Generate(root, cfg)
+		}
 	}
 
-	if _, err := os.Stat(path.Join(project, "composer.json")); err == nil {
-		return generateByPHP(project)
-	}
-
-	if _, err := os.Stat(path.Join(project, "go.mod")); err == nil {
-		return generateByGolang()
-	}
-
-	return nil, fmt.Errorf("unknown project type")
+	return nil, fmt.Errorf("unsupported project type given")
 }

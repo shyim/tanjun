@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/shyim/tanjun/internal/buildpack"
 	"os"
 	"regexp"
 
@@ -18,6 +19,8 @@ type ProjectConfig struct {
 	Image        string `yaml:"image" jsonschema:"required"`
 	KeepVersions int    `yaml:"keep_versions"`
 	Build        struct {
+		BuildPack            *buildpack.Config `yaml:"build_pack,omitempty"`
+		Dockerfile           string            `yaml:"dockerfile"`
 		RemoteBuild          bool              `yaml:"remote_build,omitempty"`
 		Labels               map[string]string `yaml:"labels,omitempty"`
 		BuildArgs            map[string]string `yaml:"args,omitempty"`
@@ -80,7 +83,6 @@ type ProjectCronjob struct {
 }
 
 type ProjectApp struct {
-	Dockerfile     string                           `yaml:"dockerfile"`
 	Environment    map[string]ProjectEnvironment    `yaml:"env,omitempty"`
 	InitialSecrets map[string]ProjectInitialSecrets `yaml:"initial_secrets,omitempty"`
 	Secrets        struct {
@@ -221,8 +223,8 @@ func (p *ProjectConfig) FillDefaults() {
 		p.App.Environment = make(map[string]ProjectEnvironment)
 	}
 
-	if p.App.Dockerfile == "" {
-		p.App.Dockerfile = "Dockerfile"
+	if p.Build.Dockerfile == "" {
+		p.Build.Dockerfile = "Dockerfile"
 	}
 
 	if p.Server.Port == 0 {
@@ -251,5 +253,9 @@ func (p *ProjectConfig) FillDefaults() {
 
 	if p.KeepVersions == 0 {
 		p.KeepVersions = 5
+	}
+
+	if p.Build.BuildPack != nil && p.Build.BuildPack.Settings == nil {
+		p.Build.BuildPack.Settings = make(buildpack.ConfigSettings)
 	}
 }
