@@ -8,12 +8,15 @@ on:
       - main
 jobs:
   examples:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matarix.os }}
     name: ${{ matrix.example }}
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
         example:
           - bun
           - go
