@@ -7,7 +7,7 @@ on:
 
 jobs:
   examples:
-    runs-on: ${{ matarix.os }}
+    runs-on: ${{ matrix.os }}
     name: ${{ matrix.example }}
     timeout-minutes: 10
     strategy:
