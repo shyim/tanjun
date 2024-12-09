@@ -78,8 +78,9 @@ type ProjectWorker struct {
 }
 
 type ProjectCronjob struct {
-	Schedule string `yaml:"schedule"`
-	Command  string `yaml:"command"`
+	Name     string `yaml:"name" jsonschema:"required" json:"name"`
+	Schedule string `yaml:"schedule" jsonschema:"required" json:"schedule"`
+	Command  string `yaml:"command" jsonschema:"required" json:"command"`
 }
 
 type ProjectApp struct {
@@ -212,6 +213,10 @@ func validateCronjobs(cronjobs []ProjectCronjob) error {
 	for i, cronjob := range cronjobs {
 		if _, err := cron.ParseStandard(cronjob.Schedule); err != nil {
 			return fmt.Errorf("cronjob[%d]: %w", i, err)
+		}
+
+		if cronjob.Name == "" {
+			return fmt.Errorf("cronjob[%d]: missing name", i)
 		}
 	}
 

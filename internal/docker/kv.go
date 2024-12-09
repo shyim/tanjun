@@ -132,7 +132,7 @@ func CreateKVConnection(ctx context.Context, client *client.Client) (*KvClient, 
 	}
 
 	if len(containers) != 1 {
-		return nil, fmt.Errorf("expected 1 kv container, got %d", len(containers))
+		return nil, fmt.Errorf("expected 1 kv container, got %d, did you forgot to run tanjun setup", len(containers))
 	}
 
 	execId, err := client.ContainerExecCreate(ctx, containers[0].ID, container.ExecOptions{

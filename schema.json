@@ -373,6 +373,9 @@
     },
     "ProjectCronjob": {
       "properties": {
+        "name": {
+          "type": "string"
+        },
         "schedule": {
           "type": "string"
         },
@@ -381,7 +384,12 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "required": [
+        "name",
+        "schedule",
+        "command"
+      ]
     },
     "ProjectEnvironment": {
       "oneOf": [

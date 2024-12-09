@@ -39,7 +39,8 @@ app:
     worker:
       command: 'php bin/console messenger:consume async --time-limit=3600'
   cronjobs:
-    - schedule: '@every 5m'
+    - name: scheduled-task
+      schedule: '@every 5m'
       command: 'php bin/console scheduled-task:run --no-wait'
   hooks:
     deploy: |

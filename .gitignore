@@ -4,3 +4,4 @@
 /completions
 dist/
 /work
+/scheduler/database.db*
