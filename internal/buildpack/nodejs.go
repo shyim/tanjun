@@ -65,8 +65,12 @@ func (n Node) Generate(root string, cfg *Config) (*GeneratedImageResult, error) 
 		}
 	}
 
-	if _, ok := packageJSON.Scripts["build"]; ok {
-		result.AddLine("RUN npm run build")
+	possibleScripts := []string{"build", "prod", "production"}
+
+	for _, script := range possibleScripts {
+		if _, ok := packageJSON.Scripts[script]; ok {
+			result.AddLine("RUN npm run %s", script)
+		}
 	}
 
 	result.NewLine()
