@@ -20,6 +20,7 @@ jobs:
           - node
           - shopware6
           - symfony
+          - deno
     steps:
       - uses: actions/checkout@v4
 
