@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../../schema.json
+name: deno
+image: tanjun/deno
+build:
+    remote_build: true
+    build_pack:
+        type: deno
+server:
+    address: 127.0.0.1
+proxy:
+    host: localhost
+    healthcheck:
+        path: /

@@ -46,6 +46,43 @@
           "if": {
             "properties": {
               "type": {
+                "const": "deno"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "packages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Allows installation of additional packages"
+                  },
+                  "env": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Default environment variables"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "Application Listing Port",
+                    "default": "3000"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "go"
               }
             }
@@ -196,6 +233,7 @@
           "type": "string",
           "enum": [
             "bun",
+            "deno",
             "go",
             "node",
             "php"
