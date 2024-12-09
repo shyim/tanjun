@@ -63,6 +63,45 @@ func (P PHP) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 
 	result.NewLine()
 
+	if _, err := os.Stat(path.Join(root, "package.json")); err == nil {
+		packageManager := detectNodePackageManager(root)
+
+		if packageManager == "pnpm" {
+			result.AddLine("RUN npm install -g pnpm")
+		} else if packageManager == "yarn" {
+			result.AddLine("RUN npm install -g yarn")
+		}
+
+		var packageJSON PackageJSON
+
+		if err := readJSONFile(path.Join(root, "package.json"), &packageJSON); err != nil {
+			return nil, fmt.Errorf("failed to read package.json: %w", err)
+		}
+
+		if packageJSON.HasDependencies() {
+			switch packageManager {
+			case "bun":
+				result.AddLine("RUN bun install")
+			case "yarn":
+				result.AddLine("RUN yarn install")
+			case "pnpm":
+				result.AddLine("RUN pnpm install")
+			default:
+				result.AddLine("RUN npm ci")
+			}
+		}
+
+		possibleScripts := []string{"build", "prod", "production"}
+
+		for _, script := range possibleScripts {
+			if _, ok := packageJSON.Scripts[script]; ok {
+				result.AddLine("RUN npm run %s", script)
+			}
+		}
+
+		result.AddLine("RUN rm -rf node_modules")
+	}
+
 	result.AddLine("FROM ghcr.io/shyim/wolfi-php/%s:%s", cfg.Settings["variant"], imageVersion)
 
 	if cfg.Settings["variant"] == "frankenphp" {
@@ -125,7 +164,7 @@ func (P PHP) Schema() *jsonschema.Schema {
 
 	properties.Set("version", &jsonschema.Schema{
 		Type:        "string",
-		Enum:        []any{"8.1", "8.2", "8.3"},
+		Enum:        []any{"8.1", "8.2", "8.3", "8.4"},
 		Description: "PHP Version (default detect from composer.json)",
 	})
 
