@@ -2,9 +2,10 @@ package buildpack
 
 import (
 	"fmt"
-	"github.com/shyim/go-version"
 	"slices"
 	"strings"
+
+	"github.com/shyim/go-version"
 )
 
 type ComposerLock struct {
@@ -30,12 +31,22 @@ type ComposerJson struct {
 	Replace map[string]string `json:"replace"`
 }
 
+func (j ComposerJson) HasPackage(packageName string) bool {
+	_, ok := j.Require[packageName]
+
+	return ok
+}
+
 func detectPHPVersion(lock ComposerLock) string {
 	if php, ok := lock.Platform["php"]; ok {
 		constraint, err := version.NewConstraint(php)
 
 		if err != nil {
 			return "8.2"
+		}
+
+		if constraint.Check(version.Must(version.NewVersion("8.4"))) {
+			return "8.4"
 		}
 
 		if constraint.Check(version.Must(version.NewVersion("8.3"))) {

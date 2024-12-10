@@ -10,15 +10,17 @@ import (
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
-type PHP struct {
+type Shopware struct {
 }
 
-func (P PHP) Name() string {
-	return "php"
+func (s Shopware) Name() string {
+	return "shopware"
 }
 
-func (P PHP) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
+func (s Shopware) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 	result := &GeneratedImageResult{}
+
+	addShopwareDefaults(cfg)
 
 	result.AddIgnoreLine("vendor")
 
@@ -51,15 +53,11 @@ func (P PHP) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 		return nil, err
 	}
 
-	result.AddLine("FROM ghcr.io/shyim/wolfi-php/%s:%s as builder", cfg.Settings["variant"], imageVersion)
-	installPackages := fmt.Sprintf("composer %s php-%s-phar php-%s-openssl php-%s-curl ", strings.Join(phpPackages, " "), phpVersion, phpVersion, phpVersion)
+	result.AddLine("FROM ghcr.io/shyim/wolfi-php/%s:%s AS builder", cfg.Settings["variant"], imageVersion)
+	result.AddLine("COPY --from=shopware/shopware-cli:bin /shopware-cli /usr/local/bin/shopware-cli")
+	installPackages := fmt.Sprintf("nodejs-22 composer %s php-%s-phar php-%s-openssl php-%s-curl ", strings.Join(phpPackages, " "), phpVersion, phpVersion, phpVersion)
 	addPackagesFromSettings(result, cfg, installPackages)
 	addEnvFromSettings(result, cfg)
-
-	result.NewLine()
-
-	result.AddLine("WORKDIR /var/www/html")
-	result.AddLine("COPY . /var/www/html")
 
 	if len(cfg.Settings["ini"].(ConfigSettings)) > 0 {
 		result.AddLine("COPY <<EOF /etc/php/conf.d/zz-custom.ini")
@@ -72,56 +70,22 @@ func (P PHP) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 		result.NewLine()
 	}
 
-	result.AddLine("RUN composer install --no-interaction --no-progress")
-
 	result.NewLine()
 
-	if _, err := os.Stat(path.Join(root, "package.json")); err == nil {
-		packageManager := detectNodePackageManager(root)
+	result.AddLine("WORKDIR /var/www/html")
+	result.AddLine("COPY . /var/www/html")
+	result.NewLine()
+	result.AddLine("RUN mkdir -p custom/plugins && mkdir -p custom/static-plugins")
 
-		if packageManager == "pnpm" {
-			result.AddLine("RUN npm install -g pnpm")
-		} else if packageManager == "yarn" {
-			result.AddLine("RUN npm install -g yarn")
-		}
-
-		var packageJSON PackageJSON
-
-		if err := readJSONFile(path.Join(root, "package.json"), &packageJSON); err != nil {
-			return nil, fmt.Errorf("failed to read package.json: %w", err)
-		}
-
-		if packageJSON.HasDependencies() {
-			switch packageManager {
-			case "bun":
-				result.AddLine("RUN bun install")
-			case "yarn":
-				result.AddLine("RUN yarn install")
-			case "pnpm":
-				result.AddLine("RUN pnpm install")
-			default:
-				result.AddLine("RUN npm ci")
-			}
-		}
-
-		possibleScripts := []string{"build", "prod", "production"}
-
-		for _, script := range possibleScripts {
-			if _, ok := packageJSON.Scripts[script]; ok {
-				result.AddLine("RUN npm run %s", script)
-			}
-		}
-
-		result.AddLine("RUN rm -rf node_modules")
+	if _, err := os.Stat(path.Join(root, "symfony.lock")); os.IsNotExist(err) {
+		result.AddLine("RUN composer install --no-scripts && composer recipes:install --force --reset && rm -rf vendor")
 	}
+
+	result.AddLine("RUN shopware-cli project ci /var/www/html")
 
 	result.AddLine("FROM ghcr.io/shyim/wolfi-php/%s:%s", cfg.Settings["variant"], imageVersion)
 
 	if cfg.Settings["variant"] == "frankenphp" {
-		if composerLock.HasPackage("runtime/frankenphp-symfony") {
-			result.AddLine("ENV APP_RUNTIME=Runtime\\\\FrankenPhpSymfony\\\\Runtime FRANKENPHP_CONFIG=\"worker ./public/index.php\"")
-		}
-
 		result.AddLine("ENV SERVER_NAME :80")
 		result.AddLine("RUN \\")
 		result.AddLine("    mkdir -p /data/caddy && mkdir -p /config/caddy; \\")
@@ -132,7 +96,7 @@ func (P PHP) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 		result.AddLine("    apk del libcap-utils")
 	}
 
-	addPackagesFromSettings(result, cfg, "curl "+strings.Join(phpPackages, " \\\n "))
+	addPackagesFromSettings(result, cfg, strings.Join(phpPackages, " \\\n "))
 	addEnvFromSettings(result, cfg)
 	result.NewLine()
 
@@ -158,7 +122,7 @@ func (P PHP) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 	return result, nil
 }
 
-func (P PHP) Schema() *jsonschema.Schema {
+func (s Shopware) Schema() *jsonschema.Schema {
 	properties := orderedmap.New[string, *jsonschema.Schema]()
 
 	properties.Set("packages", &jsonschema.Schema{
@@ -208,7 +172,7 @@ func (P PHP) Schema() *jsonschema.Schema {
 	}
 }
 
-func (P PHP) Default() ConfigSettings {
+func (s Shopware) Default() ConfigSettings {
 	return ConfigSettings{
 		"packages":   []any{},
 		"env":        make(ConfigSettings),
@@ -219,16 +183,67 @@ func (P PHP) Default() ConfigSettings {
 	}
 }
 
-func (P PHP) Supports(root string) bool {
+func (s Shopware) Supports(root string) bool {
 	var composerJson ComposerJson
 
 	if err := readJSONFile(path.Join(root, "composer.json"), &composerJson); err != nil {
 		return false
 	}
 
-	return !composerJson.HasPackage("shopware/core") && !composerJson.HasPackage("shopware/platform")
+	return composerJson.HasPackage("shopware/core") || composerJson.HasPackage("shopware/platform")
 }
 
 func init() {
-	RegisterLanguage(PHP{})
+	RegisterLanguage(Shopware{})
+}
+
+func addShopwareDefaults(cfg *Config) {
+	defaultEnv := map[string]any{
+		"APP_ENV":                      "prod",
+		"APP_URL":                      "http://localhost",
+		"APP_URL_CHECK_DISABLED":       "1",
+		"LOCK_DSN":                     "flock",
+		"MAILER_DSN":                   "null://localhost",
+		"BLUE_GREEN_DEPLOYMENT":        "0",
+		"SHOPWARE_ES_ENABLED":          "0",
+		"SHOPWARE_ES_INDEXING_ENABLED": "0",
+		"SHOPWARE_HTTP_CACHE_ENABLED":  "1",
+		"SHOPWARE_HTTP_DEFAULT_TTL":    "7200",
+		"SHOPWARE_CACHE_ID":            "docker",
+		"SHOPWARE_SKIP_WEBINSTALLER":   "1",
+		"COMPOSER_HOME":                "/tmp/composer",
+		"COMPOSER_ROOT_VERSION":        "1.0.0",
+		"INSTALL_LOCALE":               "en-GB",
+		"INSTALL_CURRENCY":             "EUR",
+		"INSTALL_ADMIN_USERNAME":       "admin",
+		"INSTALL_ADMIN_PASSWORD":       "shopware",
+	}
+
+	for key, value := range defaultEnv {
+		if _, ok := cfg.Settings["env"].(ConfigSettings)[key]; !ok {
+			cfg.Settings["env"].(ConfigSettings)[key] = value
+		}
+	}
+
+	defaultIni := map[string]any{
+		"expose_php":                      "Off",
+		"memory_limit":                    "512M",
+		"display_errors":                  "Off",
+		"error_reporting":                 "E_ALL",
+		"upload_max_filesize":             "32M",
+		"post_max_size":                   "32M",
+		"max_execution_time":              "60",
+		"opcache.enable_file_override":    "0",
+		"opcache.interned_strings_buffer": "20",
+		"opcache.max_accelerated_files":   "10000",
+		"opcache.memory_consumption":      "128",
+		"zend.assertions":                 "-1",
+		"zend.detect_unicode":             "0",
+	}
+
+	for key, value := range defaultIni {
+		if _, ok := cfg.Settings["ini"].(ConfigSettings)[key]; !ok {
+			cfg.Settings["ini"].(ConfigSettings)[key] = value
+		}
+	}
 }

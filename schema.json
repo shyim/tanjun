@@ -193,7 +193,74 @@
                     "enum": [
                       "8.1",
                       "8.2",
-                      "8.3"
+                      "8.3",
+                      "8.4"
+                    ],
+                    "description": "PHP Version (default detect from composer.json)"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "nginx",
+                      "caddy",
+                      "frankenphp"
+                    ],
+                    "description": "Server Variant",
+                    "default": "nginx"
+                  },
+                  "ini": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object",
+                    "description": "PHP Ini configurations"
+                  },
+                  "extensions": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Additional PHP extensions to install"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "shopware"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "packages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "description": "Allows installation of additional packages"
+                  },
+                  "env": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object",
+                    "description": "Default environment variables"
+                  },
+                  "version": {
+                    "type": "string",
+                    "enum": [
+                      "8.1",
+                      "8.2",
+                      "8.3",
+                      "8.4"
                     ],
                     "description": "PHP Version (default detect from composer.json)"
                   },
@@ -236,7 +303,8 @@
             "deno",
             "go",
             "node",
-            "php"
+            "php",
+            "shopware"
           ]
         }
       },
