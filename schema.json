@@ -221,6 +221,14 @@
                     },
                     "type": "array",
                     "description": "Additional PHP extensions to install"
+                  },
+                  "profiler": {
+                    "type": "string",
+                    "enum": [
+                      "tideways",
+                      ""
+                    ],
+                    "default": ""
                   }
                 },
                 "type": "object"
@@ -287,6 +295,14 @@
                     },
                     "type": "array",
                     "description": "Additional PHP extensions to install"
+                  },
+                  "profiler": {
+                    "type": "string",
+                    "enum": [
+                      "tideways",
+                      ""
+                    ],
+                    "default": ""
                   }
                 },
                 "type": "object"
@@ -337,6 +353,9 @@
                 "type": "string"
               },
               "type": "array"
+            },
+            "from_stored": {
+              "$ref": "#/$defs/ProjectFromEnv"
             },
             "onepassword": {
               "properties": {
@@ -1089,6 +1108,20 @@
           "if": {
             "properties": {
               "type": {
+                "const": "tideways:latest"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "valkey:7.2"
               }
             }
@@ -1195,6 +1228,7 @@
             "postgres:15",
             "postgres:14",
             "rabbitmq:4",
+            "tideways:latest",
             "valkey:7.2",
             "valkey:8.0"
           ]

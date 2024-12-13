@@ -49,6 +49,10 @@ func (s Shopware) Generate(root string, cfg *Config) (*GeneratedImageResult, err
 
 	phpPackages, err := getRequiredPHPPackages(phpVersion, composerJson, composerLock, cfg)
 
+	if cfg.Settings["profiler"].(string) == "tideways" {
+		phpPackages = append(phpPackages, fmt.Sprintf("php-%s-tideways", phpVersion))
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +170,12 @@ func (s Shopware) Schema() *jsonschema.Schema {
 		Description: "Additional PHP extensions to install",
 	})
 
+	properties.Set("profiler", &jsonschema.Schema{
+		Type:    "string",
+		Enum:    []any{"tideways", ""},
+		Default: "",
+	})
+
 	return &jsonschema.Schema{
 		Type:       "object",
 		Properties: properties,
@@ -180,6 +190,7 @@ func (s Shopware) Default() ConfigSettings {
 		"version":    "",
 		"variant":    "frankenphp",
 		"extensions": []any{},
+		"profiler":   "",
 	}
 }
 

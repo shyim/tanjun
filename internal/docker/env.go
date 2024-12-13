@@ -20,7 +20,13 @@ func prepareEnvironmentVariables(ctx context.Context, cfg DeployConfiguration) e
 		"service":      cfg.serviceConfig,
 	}
 
-	if err := resolveEnvFromExpression(cfg, context); err != nil {
+	secrets, err := ListProjectSecrets(cfg.storage, cfg.Name)
+
+	if err != nil {
+		return err
+	}
+
+	if err := resolveEnvFromExpression(cfg, context, secrets); err != nil {
 		return err
 	}
 
@@ -40,16 +46,38 @@ func prepareEnvironmentVariables(ctx context.Context, cfg DeployConfiguration) e
 		cfg.environmentVariables[key] = envValue
 	}
 
+	if err := resolveFromStoredSecrets(cfg, secrets); err != nil {
+		return err
+	}
+
 	if err := resolveEnvFromFile(cfg); err != nil {
 		return err
 	}
 
-	if err := resolveInitialSecrets(cfg, context); err != nil {
+	if err := resolveInitialSecrets(cfg, context, secrets); err != nil {
 		return err
 	}
 
 	if err := resolveOnePasswordSecrets(ctx, cfg); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func resolveFromStoredSecrets(cfg DeployConfiguration, secrets map[string]string) error {
+	for key, value := range cfg.ProjectConfig.App.Secrets.FromStored {
+		if value == "" {
+			value = key
+		}
+
+		if _, ok := secrets[value]; ok {
+			cfg.environmentVariables[key] = secrets[value]
+
+			continue
+		}
+
+		log.Warnf("Secret %s is not set, skipping setting a value", value)
 	}
 
 	return nil
@@ -70,7 +98,7 @@ func resolveOnePasswordSecrets(ctx context.Context, cfg DeployConfiguration) err
 	return nil
 }
 
-func resolveEnvFromExpression(cfg DeployConfiguration, context map[string]interface{}) error {
+func resolveEnvFromExpression(cfg DeployConfiguration, context map[string]interface{}, secrets map[string]string) error {
 	for key, value := range cfg.ProjectConfig.App.Environment {
 		if value.Value != "" {
 			cfg.environmentVariables[key] = value.Value
@@ -115,13 +143,7 @@ func resolveEnvFromFile(cfg DeployConfiguration) error {
 	return nil
 }
 
-func resolveInitialSecrets(cfg DeployConfiguration, context map[string]interface{}) error {
-	secrets, err := ListProjectSecrets(cfg.storage, cfg.Name)
-
-	if err != nil {
-		return err
-	}
-
+func resolveInitialSecrets(cfg DeployConfiguration, context map[string]interface{}, secrets map[string]string) error {
 	changed := false
 
 	for key, value := range cfg.ProjectConfig.App.InitialSecrets {

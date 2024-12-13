@@ -47,6 +47,10 @@ func (P PHP) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 
 	phpPackages, err := getRequiredPHPPackages(phpVersion, composerJson, composerLock, cfg)
 
+	if cfg.Settings["profiler"].(string) == "tideways" {
+		phpPackages = append(phpPackages, fmt.Sprintf("php-%s-tideways", phpVersion))
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -202,6 +206,12 @@ func (P PHP) Schema() *jsonschema.Schema {
 		Description: "Additional PHP extensions to install",
 	})
 
+	properties.Set("profiler", &jsonschema.Schema{
+		Type:    "string",
+		Enum:    []any{"tideways", ""},
+		Default: "",
+	})
+
 	return &jsonschema.Schema{
 		Type:       "object",
 		Properties: properties,
@@ -216,6 +226,7 @@ func (P PHP) Default() ConfigSettings {
 		"version":    "",
 		"variant":    "frankenphp",
 		"extensions": []any{},
+		"profiler":   "",
 	}
 }
 

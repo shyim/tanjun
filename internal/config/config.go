@@ -89,6 +89,7 @@ type ProjectApp struct {
 	Secrets        struct {
 		FromEnv     ProjectFromEnv `yaml:"from_env,omitempty"`
 		FromEnvFile []string       `yaml:"from_env_file,omitempty"`
+		FromStored  ProjectFromEnv `yaml:"from_stored,omitempty"`
 		OnePassword struct {
 			Secret []ProjectOnePassword `yaml:"items,omitempty"`
 		} `yaml:"onepassword,omitempty"`
