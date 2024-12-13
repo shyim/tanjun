@@ -75,6 +75,14 @@ func getRequiredPHPPackages(phpVersion string, composerJson ComposerJson, lock C
 		}
 	}
 
+	for pkg, _ := range lock.Platform {
+		if !strings.HasPrefix(pkg, "ext-") {
+			continue
+		}
+
+		handlePHPExtension(phpVersion, strings.TrimPrefix(pkg, "ext-"), packages)
+	}
+
 	for name := range composerJson.Replace {
 		if !strings.HasPrefix(name, "symfony/polyfill-") {
 			continue
