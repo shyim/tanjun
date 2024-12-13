@@ -161,7 +161,9 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 			},
 		}
 	} else {
-		waitChain <- nil
+		go func() {
+			waitChain <- nil
+		}()
 	}
 
 	log.Debugf("Starting buildkit build process")

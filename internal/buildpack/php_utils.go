@@ -110,6 +110,7 @@ var phpBuiltinExtensions = []string{
 	"pcre",
 	"session",
 	"zlib",
+	"hash",
 }
 
 func handlePHPExtension(phpVersion string, extName string, packages map[string]string) {
