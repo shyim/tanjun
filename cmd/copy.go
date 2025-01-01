@@ -233,12 +233,6 @@ func downloadFromContainer(ctx context.Context, c *client.Client, containerId, r
 				return fmt.Errorf("failed to create directories for symlink: %w", err)
 			}
 
-			linkName := header.Linkname
-
-			if !filepath.IsAbs(linkName) {
-				linkName = filepath.Join(filepath.Dir(targetPath), linkName)
-			}
-
 			// Create the symbolic link
 			// Note: For security or sandboxing, consider sanitizing or restricting Linkname
 			if err := os.Symlink(header.Linkname, targetPath); err != nil {

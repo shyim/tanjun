@@ -346,7 +346,7 @@ func createAppServerVolumes(ctx context.Context, client *client.Client, deployCf
 		return err
 	}
 
-	for mountName, _ := range deployCfg.ProjectConfig.App.Mounts {
+	for mountName := range deployCfg.ProjectConfig.App.Mounts {
 		expectedVolumeName := fmt.Sprintf("%s_app_%s", deployCfg.ContainerPrefix(), mountName)
 
 		found := false

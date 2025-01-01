@@ -75,7 +75,7 @@ func getRequiredPHPPackages(phpVersion string, composerJson ComposerJson, lock C
 		}
 	}
 
-	for pkg, _ := range lock.Platform {
+	for pkg := range lock.Platform {
 		if !strings.HasPrefix(pkg, "ext-") {
 			continue
 		}
