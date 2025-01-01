@@ -204,6 +204,12 @@ func downloadFromContainer(ctx context.Context, c *client.Client, containerId, r
 			return fmt.Errorf("failed to read next tar header: %w", err)
 		}
 
+		// Check for directory traversal sequences
+		if strings.Contains(header.Name, "..") {
+			log.Warnf("skipping potentially unsafe file path: %s", header.Name)
+			continue
+		}
+
 		targetPath := filepath.Join(local, header.Name)
 
 		switch header.Typeflag {
