@@ -14,10 +14,15 @@ import (
 
 var validHostName = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 
+type IncludeConfig struct {
+	Include []string `yaml:"include,omitempty"`
+}
+
 type ProjectConfig struct {
-	Name         string `yaml:"name" jsonschema:"required"`
-	Image        string `yaml:"image" jsonschema:"required"`
-	KeepVersions int    `yaml:"keep_versions"`
+	Include      []string `yaml:"include,omitempty"`
+	Name         string   `yaml:"name" jsonschema:"required"`
+	Image        string   `yaml:"image" jsonschema:"required"`
+	KeepVersions int      `yaml:"keep_versions"`
 	Build        struct {
 		BuildPack            *buildpack.Config `yaml:"build_pack,omitempty"`
 		Dockerfile           string            `yaml:"dockerfile"`
@@ -171,6 +176,26 @@ func CreateConfig(file string) (*ProjectConfig, error) {
 
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, err
+	}
+
+	// When we have an include file, we load them all into our struct
+	for _, include := range cfg.Include {
+		includeData, err := os.ReadFile(include)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to read include file %s: %w", include, err)
+		}
+
+		if err := yaml.Unmarshal(includeData, &cfg); err != nil {
+			return nil, err
+		}
+	}
+
+	// We load the override file again to override the included files
+	if len(cfg.Include) > 0 {
+		if err := yaml.Unmarshal(data, &cfg); err != nil {
+			return nil, err
+		}
 	}
 
 	cfg.FillDefaults()
