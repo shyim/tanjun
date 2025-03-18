@@ -9,7 +9,7 @@ require (
 	github.com/docker/cli v27.3.1+incompatible
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/docker/go-connections v0.5.0
-	github.com/expr-lang/expr v1.16.9
+	github.com/expr-lang/expr v1.17.0
 	github.com/gosimple/slug v1.14.0
 	github.com/invopop/jsonschema v0.12.0
 	github.com/joho/godotenv v1.5.1
