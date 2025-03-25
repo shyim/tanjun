@@ -17,7 +17,7 @@ require (
 	github.com/moby/patternmatcher v0.6.0
 	github.com/moby/term v0.5.0
 	github.com/opencontainers/image-spec v1.1.0
-	github.com/pterm/pterm v0.12.79
+	github.com/pterm/pterm v0.12.80
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shyim/go-version v0.0.0-20240530110323-4b7091cee42c
 	github.com/sirupsen/logrus v1.9.3
