@@ -2,7 +2,6 @@ name: Mirror Kamal Proxy Image
 
 on:
   workflow_dispatch:
-  push:
   schedule:
     - cron: '0 0 * * *'
 
@@ -19,7 +18,7 @@ jobs:
       - name: Install regctl
         uses: iarekylew00t/regctl-installer@v3
 
-      - name: Copy image to Frosh Registry for legacy
+      - name: Copy image to ghcr
         run: |
           curl -L -s 'https://registry.hub.docker.com/v2/repositories/basecamp/kamal-proxy/tags?page_size=1024' | \
           jq -r '."results"[] | select(.name | startswith("sha256") | not) | .name' | \

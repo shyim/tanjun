@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+
 	"golang.org/x/sync/errgroup"
 
 	"github.com/docker/docker/api/types/container"
@@ -13,7 +14,7 @@ import (
 	"github.com/docker/go-connections/nat"
 )
 
-const kamalImage = "basecamp/kamal-proxy:v0.8.0"
+const kamalImage = "ghcr.io/shyim/tanjun/kamal-proxy:v0.8.7"
 const kamalContainerName = "tanjun-proxy"
 const kamalVolumeName = "tanjun-kamal-certs"
 const kamalNetworkName = "tanjun-public"
