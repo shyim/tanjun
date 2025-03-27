@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/invopop/jsonschema"
 	"github.com/shyim/tanjun/internal/config"
@@ -15,7 +15,7 @@ import (
 type MemcachedService struct {
 }
 
-func (m MemcachedService) Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *types.ContainerJSON) error {
+func (m MemcachedService) Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *container.InspectResponse) error {
 	serviceConfig := deployCfg.ProjectConfig.Services[serviceName]
 
 	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(deployCfg, serviceName)

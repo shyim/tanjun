@@ -35,20 +35,20 @@ var serviceRmCmd = &cobra.Command{
 		service, ok := services[args[0]]
 
 		if !ok {
-			return fmt.Errorf("Service %s not found", args[0])
+			return fmt.Errorf("service %s not found", args[0])
 		}
 
 		force, _ := cmd.Flags().GetBool("force")
 
 		if !force && !service.Dangling {
-			return fmt.Errorf("Service %s is not dangling. Use --force to remove it", args[0])
+			return fmt.Errorf("service %s is not dangling. Use --force to remove it", args[0])
 		}
 
 		if err := docker.ProjectDeleteService(cmd.Context(), client, cfg, args[0]); err != nil {
 			return err
 		}
 
-		log.Infof("Service %s removed", args[0])
+		log.Infof("service %s removed", args[0])
 
 		return nil
 	},

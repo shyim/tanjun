@@ -2,15 +2,15 @@ package docker
 
 import (
 	"context"
+
 	"github.com/pterm/pterm"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"golang.org/x/sync/errgroup"
 )
 
-func startContainers(ctx context.Context, client *client.Client, containers []types.Container) error {
+func startContainers(ctx context.Context, client *client.Client, containers []container.Summary) error {
 	var err errgroup.Group
 
 	for _, c := range containers {
@@ -23,7 +23,7 @@ func startContainers(ctx context.Context, client *client.Client, containers []ty
 	return err.Wait()
 }
 
-func stopContainers(ctx context.Context, client *client.Client, containers []types.Container) error {
+func stopContainers(ctx context.Context, client *client.Client, containers []container.Summary) error {
 	var err errgroup.Group
 
 	for _, c := range containers {
@@ -36,7 +36,7 @@ func stopContainers(ctx context.Context, client *client.Client, containers []typ
 	return err.Wait()
 }
 
-func removeContainers(ctx context.Context, client *client.Client, containers []types.Container) error {
+func removeContainers(ctx context.Context, client *client.Client, containers []container.Summary) error {
 	if len(containers) == 0 {
 		return nil
 	}
@@ -66,7 +66,7 @@ func removeContainers(ctx context.Context, client *client.Client, containers []t
 	return nil
 }
 
-func findPortMapping(cfg DeployConfiguration, container types.ContainerJSON) string {
+func findPortMapping(cfg DeployConfiguration, container *container.InspectResponse) string {
 	if cfg.ProjectConfig.Proxy.AppPort != 0 {
 		return string(rune(cfg.ProjectConfig.Proxy.AppPort))
 	}

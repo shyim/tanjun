@@ -20,7 +20,7 @@ import (
 )
 
 type AppService interface {
-	Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *types.ContainerJSON) error
+	Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *container.InspectResponse) error
 	AttachInfo(serviceName string, serviceConfig config.ProjectService) interface{}
 	Validate(serviceName string, serviceConfig config.ProjectService) error
 	SupportedTypes() []string
@@ -117,7 +117,7 @@ func startServices(ctx context.Context, client *client.Client, deployCfg DeployC
 					}
 				}
 
-				var existingContainer *types.ContainerJSON
+				var existingContainer *container.InspectResponse
 
 				if containerId != "" {
 					c, err := client.ContainerInspect(ctx, containerId)
