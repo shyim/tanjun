@@ -1,0 +1,27 @@
+name: Mirror Kamal Proxy Image
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login into Github Docker Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Install regctl
+        uses: iarekylew00t/regctl-installer@v3
+
+      - name: Copy image to Frosh Registry for legacy
+        run: |
+          curl -L -s 'https://registry.hub.docker.com/v2/repositories/basecamp/kamal-proxy/tags?page_size=1024' | \
+          jq -r '."results"[] | select(.name | startswith("sha256") | not) | .name' | \
+          while read -r tag; do
+              regctl image copy basecamp/kamal-proxy:${tag} ghcr.io/shyim/tanjun/kamal-proxy:${tag}
+          done
