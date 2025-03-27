@@ -4,16 +4,17 @@ import (
 	"archive/tar"
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/charmbracelet/log"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
-	"io"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 var copyCmd = &cobra.Command{
@@ -239,8 +240,33 @@ func downloadFromContainer(ctx context.Context, c *client.Client, containerId, r
 				return fmt.Errorf("failed to create directories for symlink: %w", err)
 			}
 
-			// Create the symbolic link
-			// Note: For security or sandboxing, consider sanitizing or restricting Linkname
+			// Validate the symlink target to prevent directory traversal
+			linkDest := header.Linkname
+
+			// If the link is absolute, reject it
+			if filepath.IsAbs(linkDest) {
+				log.Warnf("skipping absolute symlink: %s -> %s", header.Name, linkDest)
+				continue
+			}
+
+			// Construct the full path that the symlink would point to
+			fullLinkPath := filepath.Join(filepath.Dir(targetPath), linkDest)
+
+			// Clean the path to resolve any ".." components
+			fullLinkPath = filepath.Clean(fullLinkPath)
+
+			// Check if the link would escape the extraction directory
+			localAbs, err := filepath.Abs(local)
+			if err != nil {
+				return fmt.Errorf("failed to get absolute path of extraction directory: %w", err)
+			}
+
+			// Ensure the symlink target is within the extraction directory
+			if !strings.HasPrefix(fullLinkPath, localAbs) {
+				log.Warnf("skipping symlink that escapes extraction directory: %s -> %s", header.Name, linkDest)
+				continue
+			}
+
 			if err := os.Symlink(header.Linkname, targetPath); err != nil {
 				return fmt.Errorf("failed to create symbolic link: %w", err)
 			}
