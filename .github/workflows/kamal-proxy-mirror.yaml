@@ -2,6 +2,7 @@ name: Mirror Kamal Proxy Image
 
 on:
   workflow_dispatch:
+  push:
   schedule:
     - cron: '0 0 * * *'
 
