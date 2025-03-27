@@ -1,8 +1,5 @@
 # Tanjun
 
-> [!IMPORTANT]
-> This tool is still in development and is not yet ready for use.
-
 Tanjun (which means Simple in Japanese)
 is a Dockerized Deployment Tool to deploy applications to external servers and cloud providers. 
 It is designed to be straightforward to use and keep everything simple for the user.
