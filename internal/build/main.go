@@ -3,11 +3,12 @@ package build
 import (
 	"context"
 	"fmt"
-	"github.com/charmbracelet/log"
-	"github.com/pterm/pterm"
 	"io"
 	"os"
 	"os/signal"
+
+	"github.com/charmbracelet/log"
+	"github.com/pterm/pterm"
 
 	"github.com/docker/docker/client"
 	buildkit "github.com/moby/buildkit/client"
@@ -129,7 +130,7 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		pr, pw := io.Pipe()
 
 		go func() {
-			resp, err := dockerClient.ImageLoad(ctx, pr, false)
+			resp, err := dockerClient.ImageLoad(ctx, pr)
 
 			if err != nil {
 				waitChain <- err
