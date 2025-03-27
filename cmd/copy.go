@@ -16,6 +16,7 @@ import (
 	"strings"
 )
 
+
 var copyCmd = &cobra.Command{
 	Use:   "cp",
 	Short: "Copy out of containers or to containers",
@@ -240,8 +241,16 @@ func downloadFromContainer(ctx context.Context, c *client.Client, containerId, r
 			}
 
 			// Create the symbolic link
-			// Note: For security or sandboxing, consider sanitizing or restricting Linkname
-			if err := os.Symlink(header.Linkname, targetPath); err != nil {
+			// Resolve symbolic links and validate the target path
+			realTargetPath, err := filepath.EvalSymlinks(targetPath)
+			if err != nil {
+				return fmt.Errorf("failed to resolve symbolic link: %w", err)
+			}
+			if !isRel(realTargetPath, local) {
+				log.Warnf("skipping potentially unsafe symlink: %s -> %s", header.Name, header.Linkname)
+				continue
+			}
+			if err := os.Symlink(header.Linkname, realTargetPath); err != nil {
 				return fmt.Errorf("failed to create symbolic link: %w", err)
 			}
 		default:
