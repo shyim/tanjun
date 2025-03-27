@@ -3,12 +3,12 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/pterm/pterm"
 	"math/rand/v2"
+
+	"github.com/pterm/pterm"
 
 	"github.com/charmbracelet/log"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/mount"
@@ -52,7 +52,7 @@ func (c DeployConfiguration) GetEnvironmentVariables() []string {
 	return env
 }
 
-func getEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]types.Container, error) {
+func getEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]container.Summary, error) {
 	options := container.ListOptions{
 		Filters: filters.NewArgs(),
 		All:     true,
@@ -64,7 +64,7 @@ func getEnvironmentContainers(ctx context.Context, client *client.Client, projec
 	return client.ContainerList(ctx, options)
 }
 
-func getWorkerEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]types.Container, error) {
+func getWorkerEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]container.Summary, error) {
 	options := container.ListOptions{
 		Filters: filters.NewArgs(),
 		All:     true,
@@ -76,7 +76,7 @@ func getWorkerEnvironmentContainers(ctx context.Context, client *client.Client, 
 	return client.ContainerList(ctx, options)
 }
 
-func getCronjobEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]types.Container, error) {
+func getCronjobEnvironmentContainers(ctx context.Context, client *client.Client, projectName string) ([]container.Summary, error) {
 	options := container.ListOptions{
 		Filters: filters.NewArgs(),
 		All:     true,
@@ -129,7 +129,7 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 		return err
 	}
 
-	image, _, err := client.ImageInspectWithRaw(ctx, deployCfg.ImageName)
+	image, err := client.ImageInspect(ctx, deployCfg.ImageName)
 
 	if err != nil {
 		return err
@@ -229,7 +229,7 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 	}
 
 	proxyHost := containerInspect.NetworkSettings.Networks["tanjun-public"].IPAddress
-	proxyPort := findPortMapping(deployCfg, containerInspect)
+	proxyPort := findPortMapping(deployCfg, &containerInspect)
 
 	kamalCmd := []string{
 		"kamal-proxy",

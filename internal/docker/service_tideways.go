@@ -3,7 +3,8 @@ package docker
 import (
 	"context"
 	"fmt"
-	"github.com/docker/docker/api/types"
+
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/invopop/jsonschema"
 	"github.com/shyim/tanjun/internal/config"
@@ -12,7 +13,7 @@ import (
 type TidewaysService struct {
 }
 
-func (t TidewaysService) Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *types.ContainerJSON) error {
+func (t TidewaysService) Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *container.InspectResponse) error {
 	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(deployCfg, serviceName)
 
 	containerCfg.Image = "ghcr.io/tideways/daemon"
