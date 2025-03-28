@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/shyim/tanjun/internal/buildpack"
 	"os"
 	"regexp"
+
+	"github.com/shyim/tanjun/internal/buildpack"
 
 	"github.com/invopop/jsonschema"
 
@@ -148,7 +149,7 @@ type ProjectMount struct {
 
 type ProjectService struct {
 	Type     string            `yaml:"type"`
-	Settings map[string]string `yaml:"settings"`
+	Settings map[string]string `yaml:"settings,omitempty"`
 }
 
 func (e ProjectService) JSONSchema() *jsonschema.Schema {
