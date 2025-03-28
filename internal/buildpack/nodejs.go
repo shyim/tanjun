@@ -43,9 +43,10 @@ func (n Node) Generate(root string, cfg *Config) (*GeneratedImageResult, error) 
 
 	result.NewLine()
 
-	if packageManager == "pnpm" {
+	switch packageManager {
+	case "pnpm":
 		result.AddLine("RUN npm install -g pnpm")
-	} else if packageManager == "yarn" {
+	case "yarn":
 		result.AddLine("RUN npm install -g yarn")
 	}
 

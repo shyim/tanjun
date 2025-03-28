@@ -34,7 +34,12 @@ var copyCmd = &cobra.Command{
 			return err
 		}
 
-		defer client.Close()
+		defer func() {
+			err := client.Close()
+			if err != nil {
+				log.Warnf("Failed to close docker client: %s", err)
+			}
+		}()
 
 		if strings.Contains(args[0], ":") {
 			parts := strings.SplitN(args[0], ":", 2)
@@ -44,13 +49,13 @@ var copyCmd = &cobra.Command{
 				serviceName = ""
 			}
 
-			containerId, err := docker.FindProjectContainer(cmd.Context(), client, cfg.Name, serviceName)
+			containerID, err := docker.FindProjectContainer(cmd.Context(), client, cfg.Name, serviceName)
 
 			if err != nil {
 				return err
 			}
 
-			return downloadFromContainer(cmd.Context(), client, containerId, parts[1], args[1])
+			return downloadFromContainer(cmd.Context(), client, containerID, parts[1], args[1])
 		} else if strings.Contains(args[1], ":") {
 			parts := strings.SplitN(args[1], ":", 2)
 			serviceName := parts[0]
@@ -59,27 +64,32 @@ var copyCmd = &cobra.Command{
 				serviceName = ""
 			}
 
-			containerId, err := docker.FindProjectContainer(cmd.Context(), client, cfg.Name, serviceName)
+			containerID, err := docker.FindProjectContainer(cmd.Context(), client, cfg.Name, serviceName)
 
 			if err != nil {
 				return err
 			}
 
-			return uploadToContainer(cmd.Context(), client, containerId, args[0], parts[1])
+			return uploadToContainer(cmd.Context(), client, containerID, args[0], parts[1])
 		}
 
 		return fmt.Errorf("invalid arguments, please provide a source and destination examle: tanjun cp application:/path/to/file /local/path")
 	},
 }
 
-func uploadToContainer(ctx context.Context, c *client.Client, containerId, local, remote string) error {
+func uploadToContainer(ctx context.Context, c *client.Client, containerID, local, remote string) error {
 	tmpDir, err := os.MkdirTemp(os.TempDir(), "tanjun-cp")
 
 	if err != nil {
 		return err
 	}
 
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			log.Warnf("Failed to remove temporary directory %s", tmpDir)
+		}
+	}()
 
 	tmpFile := filepath.Join(tmpDir, "file.tar")
 
@@ -89,11 +99,21 @@ func uploadToContainer(ctx context.Context, c *client.Client, containerId, local
 		return err
 	}
 
-	defer tarFile.Close()
+	defer func() {
+		err := tarFile.Close()
+		if err != nil {
+			log.Warnf("Failed to close tar file")
+		}
+	}()
 
 	tarWriter := tar.NewWriter(tarFile)
 
-	defer tarWriter.Close()
+	defer func() {
+		err := tarWriter.Close()
+		if err != nil {
+			log.Warnf("Failed to close tar writer: %s", err)
+		}
+	}()
 
 	stat, err := os.Stat(local)
 
@@ -108,7 +128,12 @@ func uploadToContainer(ctx context.Context, c *client.Client, containerId, local
 			return err
 		}
 
-		defer file.Close()
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				log.Warnf("Failed to close file %s", local)
+			}
+		}()
 
 		fileStat, err := file.Stat()
 
@@ -155,7 +180,12 @@ func uploadToContainer(ctx context.Context, c *client.Client, containerId, local
 					return err
 				}
 
-				defer file.Close()
+				defer func() {
+					err := file.Close()
+					if err != nil {
+						log.Warnf("Failed to close file %s", path)
+					}
+				}()
 
 				if _, err := io.Copy(tarWriter, file); err != nil {
 					return err
@@ -180,17 +210,29 @@ func uploadToContainer(ctx context.Context, c *client.Client, containerId, local
 		return err
 	}
 
-	return c.CopyToContainer(ctx, containerId, remote, generatedTar, container.CopyToContainerOptions{})
+	defer func() {
+		err := generatedTar.Close()
+		if err != nil {
+			log.Warnf("Failed to close generated tar file %s", tmpFile)
+		}
+	}()
+
+	return c.CopyToContainer(ctx, containerID, remote, generatedTar, container.CopyToContainerOptions{})
 }
 
-func downloadFromContainer(ctx context.Context, c *client.Client, containerId, remote, local string) error {
-	resp, _, err := c.CopyFromContainer(ctx, containerId, remote)
+func downloadFromContainer(ctx context.Context, c *client.Client, containerID, remote, local string) error {
+	resp, _, err := c.CopyFromContainer(ctx, containerID, remote)
 
 	if err != nil {
 		return err
 	}
 
-	defer resp.Close()
+	defer func() {
+		err := resp.Close()
+		if err != nil {
+			log.Warnf("Failed to close response body: %s", err)
+		}
+	}()
 
 	tarReader := tar.NewReader(resp)
 
@@ -230,10 +272,14 @@ func downloadFromContainer(ctx context.Context, c *client.Client, containerId, r
 				return fmt.Errorf("failed to open file for writing: %w", err)
 			}
 			if _, err := io.Copy(f, tarReader); err != nil {
-				f.Close()
+				if closeErr := f.Close(); closeErr != nil {
+					log.Warnf("Failed to close file %s: %s", targetPath, closeErr)
+				}
 				return fmt.Errorf("failed to write file contents: %w", err)
 			}
-			f.Close()
+			if err = f.Close(); err != nil {
+				log.Warnf("Failed to close file %s: %s", targetPath, err)
+			}
 		case tar.TypeSymlink:
 			// Create parent directories
 			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
@@ -275,7 +321,7 @@ func downloadFromContainer(ctx context.Context, c *client.Client, containerId, r
 		}
 	}
 
-	return err
+	return nil
 }
 
 func init() {

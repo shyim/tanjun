@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	kvstore "github.com/shyim/tanjun/kv-store"
-	"io"
 )
 
 type KvClient struct {
@@ -115,7 +116,9 @@ func (c KvClient) Set(key string, value string) error {
 
 func (c KvClient) Close() {
 	c.resp.Close()
-	c.pr.Close()
+	if err := c.pr.Close(); err != nil {
+		fmt.Printf("Failed to close pipe reader: %v\n", err)
+	}
 }
 
 func CreateKVConnection(ctx context.Context, client *client.Client) (*KvClient, error) {

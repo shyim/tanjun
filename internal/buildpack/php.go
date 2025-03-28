@@ -83,9 +83,10 @@ func (P PHP) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 	if _, err := os.Stat(path.Join(root, "package.json")); err == nil {
 		packageManager := detectNodePackageManager(root)
 
-		if packageManager == "pnpm" {
+		switch packageManager {
+		case "pnpm":
 			result.AddLine("RUN npm install -g pnpm")
-		} else if packageManager == "yarn" {
+		case "yarn":
 			result.AddLine("RUN npm install -g yarn")
 		}
 

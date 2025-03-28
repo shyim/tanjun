@@ -64,7 +64,11 @@ func runHookInContainer(ctx context.Context, client *client.Client, deployCfg De
 		return err
 	}
 
-	defer stdout.Close()
+	defer func() {
+		if err := stdout.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to close stdout: %v\n", err)
+		}
+	}()
 
 	_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, stdout)
 

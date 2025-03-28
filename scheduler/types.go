@@ -3,13 +3,14 @@ package main
 import (
 	"bufio"
 	"context"
+	"io"
+	"strings"
+	"time"
+
 	"github.com/charmbracelet/log"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"io"
-	"strings"
-	"time"
 )
 
 type SchedulerConfig struct {
@@ -56,7 +57,9 @@ func (j Job) Run() {
 	go func() {
 		_, _ = stdcopy.StdCopy(pw, pw, resp.Reader)
 		resp.Close()
-		pw.Close()
+		if err := pw.Close(); err != nil {
+			log.Errorf("Failed to close pipe writer: %v", err)
+		}
 	}()
 
 	buffer := bufio.NewScanner(pr)

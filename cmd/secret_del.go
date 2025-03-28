@@ -24,7 +24,11 @@ var secretDelCmd = &cobra.Command{
 			return err
 		}
 
-		defer client.Close()
+		defer func() {
+			if err := client.Close(); err != nil {
+				log.Warnf("Failed to close docker client: %s", err)
+			}
+		}()
 
 		kv, err := docker.CreateKVConnection(cmd.Context(), client)
 

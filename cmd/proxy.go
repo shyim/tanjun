@@ -4,14 +4,15 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/charmbracelet/log"
-	"github.com/shyim/tanjun/internal/config"
-	"github.com/shyim/tanjun/internal/docker"
-	"github.com/spf13/cobra"
 	"io"
 	"net"
 	"os"
 	"os/signal"
+
+	"github.com/charmbracelet/log"
+	"github.com/shyim/tanjun/internal/config"
+	"github.com/shyim/tanjun/internal/docker"
+	"github.com/spf13/cobra"
 )
 
 var forwardCmd = &cobra.Command{
@@ -31,7 +32,11 @@ var forwardCmd = &cobra.Command{
 			return err
 		}
 
-		defer client.Close()
+		defer func() {
+			if err := client.Close(); err != nil {
+				log.Printf("Failed to close docker client: %s", err)
+			}
+		}()
 
 		containerId, err := docker.FindProjectContainer(cmd.Context(), client, cfg.Name, args[0])
 
@@ -97,7 +102,11 @@ var forwardCmd = &cobra.Command{
 			}
 
 			go func() {
-				defer client.Close()
+				defer func() {
+					if err := client.Close(); err != nil {
+						log.Printf("Error closing client connection: %s", err)
+					}
+				}()
 
 				forwardService, err := tls.Dial("tcp", fmt.Sprintf("%s:%s", cfg.Server.Address, proxy.ListenPort), tlsConfig)
 
@@ -106,7 +115,11 @@ var forwardCmd = &cobra.Command{
 					return
 				}
 
-				defer forwardService.Close()
+				defer func() {
+					if err := forwardService.Close(); err != nil {
+						log.Printf("Error closing forward service connection: %s", err)
+					}
+				}()
 
 				go func() {
 					_, err = io.Copy(forwardService, client)

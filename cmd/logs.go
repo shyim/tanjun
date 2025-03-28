@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/charmbracelet/log"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/docker"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var logsCmd = &cobra.Command{
@@ -25,7 +27,11 @@ var logsCmd = &cobra.Command{
 			return err
 		}
 
-		defer client.Close()
+		defer func() {
+			if err := client.Close(); err != nil {
+				log.Warnf("Failed to close docker client: %s", err)
+			}
+		}()
 
 		serviceName, _ := cmd.PersistentFlags().GetString("service")
 
@@ -47,7 +53,11 @@ var logsCmd = &cobra.Command{
 			return err
 		}
 
-		defer stream.Close()
+		defer func() {
+			if err := stream.Close(); err != nil {
+				log.Warnf("Failed to close container log stream: %s", err)
+			}
+		}()
 
 		_, err = stdcopy.StdCopy(os.Stdout, os.Stderr, stream)
 
