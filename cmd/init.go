@@ -2,6 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/log"
 	"github.com/docker/docker/pkg/namesgenerator"
@@ -10,9 +14,6 @@ import (
 	"github.com/shyim/tanjun/internal/config"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
-	"os"
-	"strconv"
-	"strings"
 )
 
 var initCmd = &cobra.Command{
@@ -103,6 +104,11 @@ var initCmd = &cobra.Command{
 			cfg.Build.BuildPack = &buildpack.Config{
 				Type: language,
 			}
+
+			if err := config.AddBuildPackConfig(&cfg, language); err != nil {
+				return err
+			}
+
 			log.Infof("Detected project uses %s and trying to build automatically the Dockerfile for you. Specify a Dockerfile in your config to disable this", language)
 		} else {
 			log.Infof("Buildpack cannot generate a Dockerfile automatically. Create a Dockerfile for your application container before you can deploy.")
