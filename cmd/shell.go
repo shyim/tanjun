@@ -3,6 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/charmbracelet/log"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -11,8 +14,6 @@ import (
 	"github.com/shyim/tanjun/internal/streams"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
-	"os"
-	"strings"
 )
 
 var shellCmd = &cobra.Command{
@@ -31,7 +32,11 @@ var shellCmd = &cobra.Command{
 			return err
 		}
 
-		defer client.Close()
+		defer func() {
+			if err := client.Close(); err != nil {
+				log.Warnf("Failed to close docker client: %s", err)
+			}
+		}()
 
 		serviceName, _ := cmd.PersistentFlags().GetString("service")
 

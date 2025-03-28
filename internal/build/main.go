@@ -44,7 +44,11 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 
 	log.Debugf("Connected to remote docker client: %s (%s)", info.ServerVersion, info.Architecture)
 
-	defer remoteClient.Close()
+	defer func() {
+		if err := remoteClient.Close(); err != nil {
+			log.Warnf("Failed to close remote client: %s", err)
+		}
+	}()
 
 	if config.Build.RemoteBuild {
 		dockerClient = remoteClient
@@ -104,7 +108,11 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		return "", err
 	}
 
-	defer builder.Close()
+	defer func() {
+		if err := builder.Close(); err != nil {
+			log.Warnf("Failed to close buildkit client: %s", err)
+		}
+	}()
 
 	buildkitInfo, err := builder.Info(ctx)
 
@@ -137,7 +145,11 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 				return
 			}
 
-			defer resp.Body.Close()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					log.Warnf("Failed to close response body: %s", err)
+				}
+			}()
 
 			_, err = io.ReadAll(resp.Body)
 

@@ -23,7 +23,11 @@ var destroyCmd = &cobra.Command{
 			return err
 		}
 
-		defer client.Close()
+		defer func() {
+			if err := client.Close(); err != nil {
+				log.Warnf("Failed to close docker client: %s", err)
+			}
+		}()
 
 		if err := docker.DestroyProject(cmd.Context(), client, cfg.Name); err != nil {
 			return err

@@ -23,7 +23,11 @@ type dockerMessage struct {
 }
 
 func logDockerResponse(name string, response io.ReadCloser) error {
-	defer response.Close()
+	defer func() {
+		if err := response.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to close docker response: %v\n", err)
+		}
+	}()
 
 	spinnerInfo, err := pterm.DefaultSpinner.Start(fmt.Sprintf("Pulling image: %s", name))
 
