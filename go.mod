@@ -1,7 +1,6 @@
 module github.com/shyim/tanjun
 
 go 1.24.1
-
 require (
 	github.com/charmbracelet/huh v0.6.0
 	github.com/charmbracelet/lipgloss v0.13.0
@@ -9,7 +8,7 @@ require (
 	github.com/docker/cli v27.3.1+incompatible
 	github.com/docker/docker v28.0.4+incompatible
 	github.com/docker/go-connections v0.5.0
-	github.com/expr-lang/expr v1.17.0
+	github.com/expr-lang/expr v1.17.2
 	github.com/gosimple/slug v1.14.0
 	github.com/invopop/jsonschema v0.12.0
 	github.com/joho/godotenv v1.5.1
