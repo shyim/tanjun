@@ -1,7 +1,6 @@
 module github.com/shyim/tanjun
 
 go 1.24.1
-
 require (
 	github.com/charmbracelet/huh v0.6.0
 	github.com/charmbracelet/lipgloss v0.13.0
@@ -11,7 +10,7 @@ require (
 	github.com/docker/go-connections v0.5.0
 	github.com/expr-lang/expr v1.17.0
 	github.com/gosimple/slug v1.14.0
-	github.com/invopop/jsonschema v0.12.0
+	github.com/invopop/jsonschema v0.13.0
 	github.com/joho/godotenv v1.5.1
 	github.com/moby/buildkit v0.16.0
 	github.com/moby/patternmatcher v0.6.0
