@@ -108,12 +108,6 @@ func BuildImage(ctx context.Context, config *config.ProjectConfig, root string) 
 		return "", err
 	}
 
-	defer func() {
-		if err := builder.Close(); err != nil {
-			log.Warnf("Failed to close buildkit client: %s", err)
-		}
-	}()
-
 	buildkitInfo, err := builder.Info(ctx)
 
 	if err != nil {
