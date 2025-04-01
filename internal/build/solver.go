@@ -48,7 +48,7 @@ func getSolveConfiguration(ctx context.Context, containerConfig string) (string,
 	}
 
 	attachables := []session.Attachable{
-		authprovider.NewDockerAuthProvider(dockerConfig.LoadDefaultConfigFile(os.Stderr), nil),
+		authprovider.NewDockerAuthProvider(authprovider.DockerAuthProviderConfig{ConfigFile: dockerConfig.LoadDefaultConfigFile(os.Stderr)}),
 	}
 
 	if configFile.Build.PassThroughSSHSocket {

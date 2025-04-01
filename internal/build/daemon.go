@@ -2,13 +2,16 @@ package build
 
 import (
 	"context"
+	"time"
+
 	"github.com/charmbracelet/log"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/shyim/tanjun/internal/docker"
-	"time"
 )
+
+const buildkitdImage = "moby/buildkit:v0.18.0"
 
 func stopBuildkitd(dockerClient *client.Client, ctx context.Context, containerId string) {
 	if err := dockerClient.ContainerKill(ctx, containerId, "SIGKILL"); err != nil {
@@ -25,12 +28,12 @@ func stopBuildkitd(dockerClient *client.Client, ctx context.Context, containerId
 }
 
 func startBuildkitd(ctx context.Context, dockerClient *client.Client) (string, error) {
-	if err := docker.PullImageIfNotThere(ctx, dockerClient, "moby/buildkit:v0.16.0"); err != nil {
+	if err := docker.PullImageIfNotThere(ctx, dockerClient, buildkitdImage); err != nil {
 		return "", err
 	}
 
 	c, err := dockerClient.ContainerCreate(ctx, &container.Config{
-		Image: "moby/buildkit:v0.16.0",
+		Image: buildkitdImage,
 		Healthcheck: &container.HealthConfig{
 			Test:          []string{"CMD", "buildctl", "debug", "workers"},
 			StartInterval: time.Millisecond * 100,
