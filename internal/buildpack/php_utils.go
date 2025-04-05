@@ -119,6 +119,7 @@ var phpBuiltinExtensions = []string{
 	"session",
 	"zlib",
 	"hash",
+	"reflection",
 }
 
 func handlePHPExtension(phpVersion string, extName string, packages map[string]string) {
