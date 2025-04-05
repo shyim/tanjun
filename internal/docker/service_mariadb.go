@@ -54,7 +54,7 @@ func (m MariaDBService) Deploy(ctx context.Context, client *client.Client, servi
 	}
 
 	containerCfg.Healthcheck = &container.HealthConfig{
-		Test: []string{"CMD", "mysqladmin", "ping", "-h", "localhost"},
+		Test: []string{"CMD", "mariadb-admin", "ping", "-h", "localhost"},
 	}
 
 	for key, value := range serviceConfig.Settings {
