@@ -87,4 +87,6 @@ func addShopwareConfig(pc *ProjectConfig) {
 			Type: "mysql:8.0",
 		},
 	}
+
+	pc.Proxy.HealthCheck.Path = "/admin"
 }
