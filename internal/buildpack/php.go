@@ -52,6 +52,10 @@ func (P PHP) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 		phpPackages = append(phpPackages, fmt.Sprintf("php-%s-tideways", phpVersion))
 	case "blackfire":
 		phpPackages = append(phpPackages, fmt.Sprintf("php-%s-blackfire", phpVersion))
+
+		if cfg.Settings["variant"].(string) == "frankenphp" {
+			return nil, fmt.Errorf("blackfire is not supported with frankenphp, set variant in buildpack config to nginx or caddy")
+		}
 	}
 
 	if err != nil {
