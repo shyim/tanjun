@@ -8,29 +8,26 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
+	"github.com/shyim/tanjun/internal/config"
 	"github.com/shyim/tanjun/internal/onepassword"
 
 	"github.com/expr-lang/expr"
 )
 
-func prepareEnvironmentVariables(ctx context.Context, cfg DeployConfiguration) error {
+func getEnvironmentVariables(ctx context.Context, cfg DeployConfiguration, environmentVariables map[string]config.ProjectEnvironment, genericSecret config.ProjectGenericSecrets, initialSecrets map[string]config.ProjectInitialSecrets) (map[string]string, error) {
 	context := map[string]interface{}{
 		"randomString": randomString,
 		"config":       cfg.ProjectConfig,
 		"service":      cfg.serviceConfig,
 	}
 
-	secrets, err := ListProjectSecrets(cfg.storage, cfg.Name)
+	returnSecrets := make(map[string]string)
 
-	if err != nil {
-		return err
+	if err := resolveEnvFromExpression(cfg, returnSecrets, context, environmentVariables); err != nil {
+		return nil, err
 	}
 
-	if err := resolveEnvFromExpression(cfg, context, secrets); err != nil {
-		return err
-	}
-
-	for key, value := range cfg.ProjectConfig.App.Secrets.FromEnv {
+	for key, value := range genericSecret.FromEnv {
 		if value == "" {
 			value = key
 		}
@@ -43,36 +40,36 @@ func prepareEnvironmentVariables(ctx context.Context, cfg DeployConfiguration) e
 			continue
 		}
 
-		cfg.environmentVariables[key] = envValue
+		returnSecrets[key] = envValue
 	}
 
-	if err := resolveFromStoredSecrets(cfg, secrets); err != nil {
-		return err
+	if err := resolveFromStoredSecrets(returnSecrets, cfg, genericSecret); err != nil {
+		return nil, err
 	}
 
-	if err := resolveEnvFromFile(cfg); err != nil {
-		return err
+	if err := resolveEnvFromFile(returnSecrets, genericSecret); err != nil {
+		return nil, err
 	}
 
-	if err := resolveInitialSecrets(cfg, context, secrets); err != nil {
-		return err
+	if err := resolveInitialSecrets(returnSecrets, cfg, context, initialSecrets); err != nil {
+		return nil, err
 	}
 
-	if err := resolveOnePasswordSecrets(ctx, cfg); err != nil {
-		return err
+	if err := resolveOnePasswordSecrets(ctx, returnSecrets, genericSecret); err != nil {
+		return nil, err
 	}
 
-	return nil
+	return returnSecrets, nil
 }
 
-func resolveFromStoredSecrets(cfg DeployConfiguration, secrets map[string]string) error {
-	for key, value := range cfg.ProjectConfig.App.Secrets.FromStored {
+func resolveFromStoredSecrets(returnSecrets map[string]string, cfg DeployConfiguration, genericSecrets config.ProjectGenericSecrets) error {
+	for key, value := range genericSecrets.FromStored {
 		if value == "" {
 			value = key
 		}
 
-		if _, ok := secrets[value]; ok {
-			cfg.environmentVariables[key] = secrets[value]
+		if _, ok := cfg.storedSecrets[value]; ok {
+			returnSecrets[key] = cfg.storedSecrets[value]
 
 			continue
 		}
@@ -83,8 +80,8 @@ func resolveFromStoredSecrets(cfg DeployConfiguration, secrets map[string]string
 	return nil
 }
 
-func resolveOnePasswordSecrets(ctx context.Context, cfg DeployConfiguration) error {
-	for _, secret := range cfg.ProjectConfig.App.Secrets.OnePassword.Secret {
+func resolveOnePasswordSecrets(ctx context.Context, returnSecrets map[string]string, genericSecrets config.ProjectGenericSecrets) error {
+	for _, secret := range genericSecrets.OnePassword.Secret {
 		onePasswordSecrets, err := onepassword.ResolveSecrets(ctx, secret)
 
 		if err != nil {
@@ -92,16 +89,16 @@ func resolveOnePasswordSecrets(ctx context.Context, cfg DeployConfiguration) err
 		}
 
 		for key, value := range onePasswordSecrets {
-			cfg.environmentVariables[key] = value
+			returnSecrets[key] = value
 		}
 	}
 	return nil
 }
 
-func resolveEnvFromExpression(cfg DeployConfiguration, context map[string]interface{}, secrets map[string]string) error {
-	for key, value := range cfg.ProjectConfig.App.Environment {
+func resolveEnvFromExpression(cfg DeployConfiguration, returnSecrets map[string]string, context map[string]interface{}, environment map[string]config.ProjectEnvironment) error {
+	for key, value := range environment {
 		if value.Value != "" {
-			cfg.environmentVariables[key] = value.Value
+			returnSecrets[key] = value.Value
 
 			continue
 		}
@@ -116,13 +113,13 @@ func resolveEnvFromExpression(cfg DeployConfiguration, context map[string]interf
 			return err
 		}
 
-		cfg.environmentVariables[key] = output.(string)
+		returnSecrets[key] = output.(string)
 	}
 	return nil
 }
 
-func resolveEnvFromFile(cfg DeployConfiguration) error {
-	for _, fileName := range cfg.ProjectConfig.App.Secrets.FromEnvFile {
+func resolveEnvFromFile(returnSecrets map[string]string, genericSecrets config.ProjectGenericSecrets) error {
+	for _, fileName := range genericSecrets.FromEnvFile {
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
 			log.Warnf("Environment file %s does not exist, skipping setting a value", fileName)
 
@@ -136,19 +133,19 @@ func resolveEnvFromFile(cfg DeployConfiguration) error {
 		}
 
 		for key, value := range envMap {
-			cfg.environmentVariables[key] = value
+			returnSecrets[key] = value
 		}
 	}
 
 	return nil
 }
 
-func resolveInitialSecrets(cfg DeployConfiguration, context map[string]interface{}, secrets map[string]string) error {
+func resolveInitialSecrets(returnSecrets map[string]string, cfg DeployConfiguration, context map[string]interface{}, initialSecrets map[string]config.ProjectInitialSecrets) error {
 	changed := false
 
-	for key, value := range cfg.ProjectConfig.App.InitialSecrets {
-		if _, ok := secrets[key]; ok {
-			cfg.environmentVariables[key] = secrets[key]
+	for key, value := range initialSecrets {
+		if _, ok := returnSecrets[key]; ok {
+			returnSecrets[key] = cfg.storedSecrets[key]
 
 			continue
 		}
@@ -163,14 +160,14 @@ func resolveInitialSecrets(cfg DeployConfiguration, context map[string]interface
 			return err
 		}
 
-		cfg.environmentVariables[key] = output.(string)
-		secrets[key] = output.(string)
+		returnSecrets[key] = output.(string)
+		cfg.storedSecrets[key] = output.(string)
 
 		changed = true
 	}
 
 	if changed {
-		if err := SetProjectSecrets(cfg.storage, cfg.Name, secrets); err != nil {
+		if err := SetProjectSecrets(cfg.storage, cfg.Name, cfg.storedSecrets); err != nil {
 			return err
 		}
 	}

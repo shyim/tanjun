@@ -18,7 +18,7 @@ type OpenSearchService struct {
 func (v OpenSearchService) Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *container.InspectResponse) error {
 	serviceConfig := deployCfg.ProjectConfig.Services[serviceName]
 
-	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(deployCfg, serviceName)
+	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(ctx, deployCfg, serviceName)
 
 	containerCfg.Image = fmt.Sprintf("opensearchproject/%s", serviceConfig.Type)
 	containerCfg.Env = append(

@@ -37,7 +37,7 @@ type PostgresService struct {
 func (p PostgresService) Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *container.InspectResponse) error {
 	serviceConfig := deployCfg.ProjectConfig.Services[serviceName]
 
-	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(deployCfg, serviceName)
+	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(ctx, deployCfg, serviceName)
 
 	containerCfg.Image = "postgres:alpine"
 	containerCfg.Env = append(containerCfg.Env, "POSTGRES_DB=database", "POSTGRES_USER=user", "POSTGRES_PASSWORD=password")

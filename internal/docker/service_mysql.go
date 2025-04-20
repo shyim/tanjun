@@ -34,7 +34,7 @@ type MySQLService struct {
 func (m MySQLService) Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *container.InspectResponse) error {
 	serviceConfig := deployCfg.ProjectConfig.Services[serviceName]
 
-	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(deployCfg, serviceName)
+	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(ctx, deployCfg, serviceName)
 
 	containerCfg.Env = append(containerCfg.Env, "MYSQL_ALLOW_EMPTY_PASSWORD=yes", "MYSQL_DATABASE=database")
 
@@ -62,7 +62,13 @@ func (m MySQLService) Deploy(ctx context.Context, client *client.Client, service
 	}
 
 	if existingContainer != nil {
-		if slices.Compare(existingContainer.Config.Cmd, containerCfg.Cmd) == 0 {
+		existingContainerCmd := existingContainer.Config.Cmd
+
+		if len(existingContainerCmd) > 0 && existingContainerCmd[0] == "mysqld" {
+			existingContainerCmd = existingContainerCmd[1:]
+		}
+
+		if slices.Compare(existingContainerCmd, containerCfg.Cmd) == 0 {
 			return nil
 		}
 

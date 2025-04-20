@@ -226,6 +226,7 @@
                     "type": "string",
                     "enum": [
                       "tideways",
+                      "blackfire",
                       ""
                     ],
                     "default": ""
@@ -300,6 +301,7 @@
                     "type": "string",
                     "enum": [
                       "tideways",
+                      "blackfire",
                       ""
                     ],
                     "default": ""
@@ -344,34 +346,7 @@
           "type": "object"
         },
         "secrets": {
-          "properties": {
-            "from_env": {
-              "$ref": "#/$defs/ProjectFromEnv"
-            },
-            "from_env_file": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "from_stored": {
-              "$ref": "#/$defs/ProjectFromEnv"
-            },
-            "onepassword": {
-              "properties": {
-                "items": {
-                  "items": {
-                    "$ref": "#/$defs/ProjectOnePassword"
-                  },
-                  "type": "array"
-                }
-              },
-              "additionalProperties": false,
-              "type": "object"
-            }
-          },
-          "additionalProperties": false,
-          "type": "object"
+          "$ref": "#/$defs/ProjectGenericSecrets"
         },
         "mounts": {
           "additionalProperties": {
@@ -409,6 +384,12 @@
     },
     "ProjectConfig": {
       "properties": {
+        "include": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "name": {
           "type": "string"
         },
@@ -555,6 +536,36 @@
       },
       "type": "object"
     },
+    "ProjectGenericSecrets": {
+      "properties": {
+        "from_env": {
+          "$ref": "#/$defs/ProjectFromEnv"
+        },
+        "from_env_file": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "from_stored": {
+          "$ref": "#/$defs/ProjectFromEnv"
+        },
+        "onepassword": {
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/$defs/ProjectOnePassword"
+              },
+              "type": "array"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "ProjectInitialSecrets": {
       "properties": {
         "expr": {
@@ -684,6 +695,267 @@
     },
     "ProjectService": {
       "allOf": [
+        {
+          "properties": {
+            "env": {
+              "additionalProperties": {
+                "properties": {
+                  "value": {
+                    "type": "string"
+                  },
+                  "expr": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "type": "object"
+            },
+            "secrets": {
+              "properties": {
+                "from_env": {
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "type": "object"
+                },
+                "from_env_file": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "from_stored": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "onepassword": {
+                  "properties": {
+                    "items": {
+                      "items": {
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "vault": {
+                            "type": "string"
+                          },
+                          "omit_fields": {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "remap_fields": {
+                            "additionalProperties": {
+                              "type": "string"
+                            },
+                            "type": "object"
+                          },
+                          "fields": {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "blackfire:latest"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "mariadb:10.6"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "sql_mode": {
+                    "type": "string"
+                  },
+                  "log_bin_trust_function_creators": {
+                    "type": "string"
+                  },
+                  "binlog_cache_size": {
+                    "type": "string"
+                  },
+                  "join_buffer_size": {
+                    "type": "string"
+                  },
+                  "innodb_log_file_size": {
+                    "type": "string"
+                  },
+                  "innodb_buffer_pool_size": {
+                    "type": "string"
+                  },
+                  "innodb_buffer_pool_instances": {
+                    "type": "string"
+                  },
+                  "group_concat_max_len": {
+                    "type": "string"
+                  },
+                  "max_connections": {
+                    "type": "string"
+                  },
+                  "max_allowed_packet": {
+                    "type": "string"
+                  },
+                  "max_binlog_size": {
+                    "type": "string"
+                  },
+                  "binlog_expire_logs_seconds": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "mariadb:10.11"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "sql_mode": {
+                    "type": "string"
+                  },
+                  "log_bin_trust_function_creators": {
+                    "type": "string"
+                  },
+                  "binlog_cache_size": {
+                    "type": "string"
+                  },
+                  "join_buffer_size": {
+                    "type": "string"
+                  },
+                  "innodb_log_file_size": {
+                    "type": "string"
+                  },
+                  "innodb_buffer_pool_size": {
+                    "type": "string"
+                  },
+                  "innodb_buffer_pool_instances": {
+                    "type": "string"
+                  },
+                  "group_concat_max_len": {
+                    "type": "string"
+                  },
+                  "max_connections": {
+                    "type": "string"
+                  },
+                  "max_allowed_packet": {
+                    "type": "string"
+                  },
+                  "max_binlog_size": {
+                    "type": "string"
+                  },
+                  "binlog_expire_logs_seconds": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "mariadb:11.4"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "sql_mode": {
+                    "type": "string"
+                  },
+                  "log_bin_trust_function_creators": {
+                    "type": "string"
+                  },
+                  "binlog_cache_size": {
+                    "type": "string"
+                  },
+                  "join_buffer_size": {
+                    "type": "string"
+                  },
+                  "innodb_log_file_size": {
+                    "type": "string"
+                  },
+                  "innodb_buffer_pool_size": {
+                    "type": "string"
+                  },
+                  "innodb_buffer_pool_instances": {
+                    "type": "string"
+                  },
+                  "group_concat_max_len": {
+                    "type": "string"
+                  },
+                  "max_connections": {
+                    "type": "string"
+                  },
+                  "max_allowed_packet": {
+                    "type": "string"
+                  },
+                  "max_binlog_size": {
+                    "type": "string"
+                  },
+                  "binlog_expire_logs_seconds": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
         {
           "if": {
             "properties": {
@@ -1219,6 +1491,10 @@
         "type": {
           "type": "string",
           "enum": [
+            "blackfire:latest",
+            "mariadb:10.6",
+            "mariadb:10.11",
+            "mariadb:11.4",
             "memcached:latest",
             "mysql:8.0",
             "mysql:8.4",

@@ -18,7 +18,93 @@ func main() {
 	properties := orderedmap.New[string, *jsonschema.Schema]()
 
 	types := make([]interface{}, 0)
-	allOf := []*jsonschema.Schema{}
+	allOf := []*jsonschema.Schema{
+		{
+			Properties: newOrderedMap(map[string]*jsonschema.Schema{
+				"env": {
+					Type: "object",
+					AdditionalProperties: &jsonschema.Schema{
+						Type: "object",
+						Properties: newOrderedMap(map[string]*jsonschema.Schema{
+							"value": {
+								Type: "string",
+							},
+							"expr": {
+								Type: "string",
+							},
+						}),
+					},
+				},
+				"secrets": {
+					Type: "object",
+					Properties: newOrderedMap(map[string]*jsonschema.Schema{
+						"from_env": {
+							Type: "object",
+							AdditionalProperties: &jsonschema.Schema{
+								OneOf: []*jsonschema.Schema{
+									{
+										Type: "string",
+									},
+									{
+										Type: "null",
+									},
+								},
+							},
+						},
+						"from_env_file": {
+							Type: "array",
+							Items: &jsonschema.Schema{
+								Type: "string",
+							},
+						},
+						"from_stored": {
+							Type: "object",
+							AdditionalProperties: &jsonschema.Schema{
+								Type: "string",
+							},
+						},
+						"onepassword": {
+							Type: "object",
+							Properties: newOrderedMap(map[string]*jsonschema.Schema{
+								"items": {
+									Type: "array",
+									Items: &jsonschema.Schema{
+										Type: "object",
+										Properties: newOrderedMap(map[string]*jsonschema.Schema{
+											"name": {
+												Type: "string",
+											},
+											"vault": {
+												Type: "string",
+											},
+											"omit_fields": {
+												Type: "array",
+												Items: &jsonschema.Schema{
+													Type: "string",
+												},
+											},
+											"remap_fields": {
+												Type: "object",
+												AdditionalProperties: &jsonschema.Schema{
+													Type: "string",
+												},
+											},
+											"fields": {
+												Type: "array",
+												Items: &jsonschema.Schema{
+													Type: "string",
+												},
+											},
+										}),
+									},
+								},
+							}),
+						},
+					}),
+				},
+			}),
+		},
+	}
 
 	for _, svc := range allServices {
 		for _, t := range svc.SupportedTypes() {

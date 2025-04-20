@@ -16,7 +16,7 @@ type RabbitmqService struct {
 }
 
 func (v RabbitmqService) Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *container.InspectResponse) error {
-	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(deployCfg, serviceName)
+	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(ctx, deployCfg, serviceName)
 
 	containerCfg.Image = "rabbitmq:4-management-alpine"
 

@@ -140,12 +140,24 @@ func startServices(ctx context.Context, client *client.Client, deployCfg DeployC
 	return wg.Wait()
 }
 
-func getDefaultServiceContainers(cfg DeployConfiguration, name string) (string, *container.Config, *network.NetworkingConfig, *container.HostConfig) {
+func getDefaultServiceContainers(ctx context.Context, cfg DeployConfiguration, name string) (string, *container.Config, *network.NetworkingConfig, *container.HostConfig) {
 	containerName := fmt.Sprintf("%s_%s", cfg.ContainerPrefix(), name)
+
+	envValues, err := getEnvironmentVariables(ctx, cfg, cfg.ProjectConfig.Services[name].Environment, cfg.ProjectConfig.Services[name].Secrets, make(map[string]config.ProjectInitialSecrets))
+
+	if err != nil {
+		return "", nil, nil, nil
+	}
+
+	envValuesList := []string{}
+
+	for key, value := range envValues {
+		envValuesList = append(envValuesList, fmt.Sprintf("%s=%s", key, value))
+	}
 
 	containerCfg := &container.Config{
 		Image: cfg.ProjectConfig.Services[name].Type,
-		Env:   []string{},
+		Env:   envValuesList,
 		Labels: map[string]string{
 			"com.docker.compose.project": cfg.ContainerPrefix(),
 			"com.docker.compose.service": name,
