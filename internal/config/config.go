@@ -139,8 +139,8 @@ type ProjectInitialSecrets struct {
 }
 
 type ProjectEnvironment struct {
-	Value      string `yaml:"value" jsonschema:"oneof_required=value"`
-	Expression string `yaml:"expr" jsonschema:"oneof_required=expr"`
+	Value      string `yaml:"value,omitempty" jsonschema:"oneof_required=value"`
+	Expression string `yaml:"expr,omitempty" jsonschema:"oneof_required=expr"`
 }
 
 type ProjectMount struct {
