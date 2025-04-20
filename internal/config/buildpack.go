@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 func AddBuildPackConfig(pc *ProjectConfig, language string) error {
 	switch language {
 	case "shopware":
@@ -10,9 +12,15 @@ func AddBuildPackConfig(pc *ProjectConfig, language string) error {
 }
 
 func addShopwareConfig(pc *ProjectConfig) {
+	httpScheme := "http"
+
+	if pc.Proxy.SSL {
+		httpScheme = "https"
+	}
+
 	pc.App.Environment = map[string]ProjectEnvironment{
 		"APP_URL": {
-			Expression: `"https://" + config.Proxy.Host`,
+			Expression: fmt.Sprintf(`"%s://" + config.Proxy.Host`, httpScheme),
 		},
 		"APP_ENV": {
 			Value: "prod",
