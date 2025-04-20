@@ -34,7 +34,7 @@ type MariaDBService struct {
 func (m MariaDBService) Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *container.InspectResponse) error {
 	serviceConfig := deployCfg.ProjectConfig.Services[serviceName]
 
-	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(deployCfg, serviceName)
+	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(ctx, deployCfg, serviceName)
 
 	containerCfg.Env = append(containerCfg.Env, "MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=yes", "MARIADB_DATABASE=database")
 

@@ -18,7 +18,7 @@ type ValkeyService struct {
 func (v ValkeyService) Deploy(ctx context.Context, client *client.Client, serviceName string, deployCfg DeployConfiguration, existingContainer *container.InspectResponse) error {
 	serviceConfig := deployCfg.ProjectConfig.Services[serviceName]
 
-	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(deployCfg, serviceName)
+	containerName, containerCfg, networkConfig, hostCfg := getDefaultServiceContainers(ctx, deployCfg, serviceName)
 
 	containerCfg.Healthcheck = &container.HealthConfig{
 		Test: []string{"CMD", "valkey-cli", "ping"},

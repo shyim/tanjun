@@ -92,18 +92,11 @@ type ProjectCronjob struct {
 type ProjectApp struct {
 	Environment    map[string]ProjectEnvironment    `yaml:"env,omitempty"`
 	InitialSecrets map[string]ProjectInitialSecrets `yaml:"initial_secrets,omitempty"`
-	Secrets        struct {
-		FromEnv     ProjectFromEnv `yaml:"from_env,omitempty"`
-		FromEnvFile []string       `yaml:"from_env_file,omitempty"`
-		FromStored  ProjectFromEnv `yaml:"from_stored,omitempty"`
-		OnePassword struct {
-			Secret []ProjectOnePassword `yaml:"items,omitempty"`
-		} `yaml:"onepassword,omitempty"`
-	} `yaml:"secrets,omitempty"`
-	Mounts   map[string]ProjectMount  `yaml:"mounts,omitempty"`
-	Workers  map[string]ProjectWorker `yaml:"workers,omitempty"`
-	Cronjobs []ProjectCronjob         `yaml:"cronjobs,omitempty"`
-	Hooks    struct {
+	Secrets        ProjectGenericSecrets            `yaml:"secrets,omitempty"`
+	Mounts         map[string]ProjectMount          `yaml:"mounts,omitempty"`
+	Workers        map[string]ProjectWorker         `yaml:"workers,omitempty"`
+	Cronjobs       []ProjectCronjob                 `yaml:"cronjobs,omitempty"`
+	Hooks          struct {
 		Deploy     string `yaml:"deploy,omitempty"`
 		PostDeploy string `yaml:"post_deploy,omitempty"`
 	} `yaml:"hooks,omitempty"`
@@ -148,8 +141,19 @@ type ProjectMount struct {
 }
 
 type ProjectService struct {
-	Type     string            `yaml:"type"`
-	Settings map[string]string `yaml:"settings,omitempty"`
+	Type        string                        `yaml:"type"`
+	Settings    map[string]string             `yaml:"settings,omitempty"`
+	Environment map[string]ProjectEnvironment `yaml:"env,omitempty"`
+	Secrets     ProjectGenericSecrets         `yaml:"secrets,omitempty"`
+}
+
+type ProjectGenericSecrets struct {
+	FromEnv     ProjectFromEnv `yaml:"from_env,omitempty"`
+	FromEnvFile []string       `yaml:"from_env_file,omitempty"`
+	FromStored  ProjectFromEnv `yaml:"from_stored,omitempty"`
+	OnePassword struct {
+		Secret []ProjectOnePassword `yaml:"items,omitempty"`
+	} `yaml:"onepassword,omitempty"`
 }
 
 func (e ProjectService) JSONSchema() *jsonschema.Schema {

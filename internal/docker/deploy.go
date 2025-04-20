@@ -36,6 +36,7 @@ type DeployConfiguration struct {
 	storage              *KvClient
 	serviceConfig        map[string]interface{}
 	imageConfig          *container.Config
+	storedSecrets        map[string]string
 }
 
 func (c DeployConfiguration) ContainerPrefix() string {
@@ -143,6 +144,12 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 		return err
 	}
 
+	deployCfg.storedSecrets, err = ListProjectSecrets(deployCfg.storage, deployCfg.Name)
+
+	if err != nil {
+		return err
+	}
+
 	defer deployCfg.storage.Close()
 
 	if err := createEnvironmentNetwork(ctx, client, deployCfg); err != nil {
@@ -163,9 +170,13 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 		return err
 	}
 
-	if err := prepareEnvironmentVariables(ctx, deployCfg); err != nil {
+	environmentVariables, err := getEnvironmentVariables(ctx, deployCfg, deployCfg.ProjectConfig.App.Environment, deployCfg.ProjectConfig.App.Secrets, deployCfg.ProjectConfig.App.InitialSecrets)
+
+	if err != nil {
 		return err
 	}
+
+	deployCfg.environmentVariables = environmentVariables
 
 	beforeWorkers, err := getWorkerEnvironmentContainers(ctx, client, deployCfg.Name)
 

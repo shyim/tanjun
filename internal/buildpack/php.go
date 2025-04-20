@@ -47,15 +47,18 @@ func (P PHP) Generate(root string, cfg *Config) (*GeneratedImageResult, error) {
 
 	phpPackages, err := getRequiredPHPPackages(phpVersion, composerJson, composerLock, cfg)
 
-	if cfg.Settings["profiler"].(string) == "tideways" {
+	switch cfg.Settings["profiler"].(string) {
+	case "tideways":
 		phpPackages = append(phpPackages, fmt.Sprintf("php-%s-tideways", phpVersion))
+	case "blackfire":
+		phpPackages = append(phpPackages, fmt.Sprintf("php-%s-blackfire", phpVersion))
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	result.AddLine("FROM ghcr.io/shyim/wolfi-php/%s:%s as builder", cfg.Settings["variant"], imageVersion)
+	result.AddLine("FROM ghcr.io/shyim/wolfi-php/%s:%s AS builder", cfg.Settings["variant"], imageVersion)
 	installPackages := fmt.Sprintf("composer %s php-%s-phar php-%s-openssl php-%s-curl ", strings.Join(phpPackages, " "), phpVersion, phpVersion, phpVersion)
 	addPackagesFromSettings(result, cfg, installPackages)
 	addEnvFromSettings(result, cfg)
@@ -209,7 +212,7 @@ func (P PHP) Schema() *jsonschema.Schema {
 
 	properties.Set("profiler", &jsonschema.Schema{
 		Type:    "string",
-		Enum:    []any{"tideways", ""},
+		Enum:    []any{"tideways", "blackfire", ""},
 		Default: "",
 	})
 

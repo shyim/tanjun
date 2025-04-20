@@ -49,8 +49,15 @@ func (s Shopware) Generate(root string, cfg *Config) (*GeneratedImageResult, err
 
 	phpPackages, err := getRequiredPHPPackages(phpVersion, composerJson, composerLock, cfg)
 
-	if cfg.Settings["profiler"].(string) == "tideways" {
+	switch cfg.Settings["profiler"].(string) {
+	case "tideways":
 		phpPackages = append(phpPackages, fmt.Sprintf("php-%s-tideways", phpVersion))
+	case "blackfire":
+		phpPackages = append(phpPackages, fmt.Sprintf("php-%s-blackfire", phpVersion))
+
+		if cfg.Settings["variant"].(string) == "frankenphp" {
+			return nil, fmt.Errorf("blackfire is not supported with frankenphp, set variant in buildpack config to nginx or caddy")
+		}
 	}
 
 	if err != nil {
@@ -172,7 +179,7 @@ func (s Shopware) Schema() *jsonschema.Schema {
 
 	properties.Set("profiler", &jsonschema.Schema{
 		Type:    "string",
-		Enum:    []any{"tideways", ""},
+		Enum:    []any{"tideways", "blackfire", ""},
 		Default: "",
 	})
 
