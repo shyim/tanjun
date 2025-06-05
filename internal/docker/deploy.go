@@ -15,6 +15,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
+	dockerspec "github.com/moby/docker-image-spec/specs-go/v1"
 	"github.com/shyim/tanjun/internal/config"
 )
 
@@ -35,7 +36,7 @@ type DeployConfiguration struct {
 	environmentVariables map[string]string
 	storage              *KvClient
 	serviceConfig        map[string]interface{}
-	imageConfig          *container.Config
+	imageConfig          *dockerspec.DockerOCIImageConfig
 	storedSecrets        map[string]string
 }
 
