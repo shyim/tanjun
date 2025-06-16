@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand/v2"
+	"strings"
 
 	"github.com/pterm/pterm"
 
@@ -278,6 +279,8 @@ func Deploy(ctx context.Context, client *client.Client, projectConfig *config.Pr
 	if deployCfg.ProjectConfig.Proxy.Buffering.Memory > 0 {
 		kamalCmd = append(kamalCmd, "--buffer-memory", fmt.Sprintf("%d", deployCfg.ProjectConfig.Proxy.Buffering.Memory))
 	}
+
+	log.Debugf("Kamal command: %s", strings.Join(kamalCmd, " "))
 
 	removalContainers := append(beforeContainers, beforeWorkers...)
 
