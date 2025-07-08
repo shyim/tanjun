@@ -13,7 +13,7 @@ require (
 	github.com/gosimple/slug v1.15.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/joho/godotenv v1.5.1
-	github.com/moby/buildkit v0.23.1
+	github.com/moby/buildkit v0.23.2
 	github.com/moby/patternmatcher v0.6.0
 	github.com/moby/term v0.5.2
 	github.com/opencontainers/image-spec v1.1.1
