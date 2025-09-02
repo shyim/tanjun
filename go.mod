@@ -22,7 +22,7 @@ require (
 	github.com/shyim/go-version v0.0.0-20250224150004-f2d89e956a65
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tonistiigi/fsutil v0.0.0-20250605211040-586307ad452f
 	golang.org/x/sync v0.16.0
 	golang.org/x/term v0.34.0
